@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LangExtract Studio — AI-Powered Text Extraction</title>
+  <meta name="description"
+    content="LangExtract Studio: Visually extract structured entities from any text using LLMs. Define prompts, add few-shot examples, and visualize results instantly." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=170889" />
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="8" fill="url(#logoGrad)" />
+          <path d="M7 9h14M7 14h10M7 19h6" stroke="white" stroke-width="2" stroke-linecap="round" />
+          <circle cx="21" cy="19" r="3" fill="white" opacity="0.9" />
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1" />
+              <stop offset="1" stop-color="#8b5cf6" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <h1 class="app-title">LangExtract <span class="title-studio">Studio</span></h1>
+        <span class="app-subtitle">AI-Powered Structured Extraction</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- Mode Toggle -->
+      <div class="mode-toggle" id="modeToggle">
+        <button class="mode-btn active" id="modeStandard" data-mode="standard">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+          Standard
+        </button>
+        <button class="mode-btn" id="modeClinical" data-mode="clinical">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          Clinical
+        </button>
+        <button class="mode-btn" id="modeStructured" data-mode="structured">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
+          </svg>
+          Schema
+        </button>
+      </div>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span class="status-text">Ready</span>
+      </div>
+      <a href="https://github.com/google/langextract" target="_blank" rel="noopener noreferrer" class="github-link"
+        title="View on GitHub">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.64.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33s1.7.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.41-.01 2.74 0 .27.18.58.69.48A10.02 10.02 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
+        </svg>
+      </a>
+    </div>
+
+  </header>
+
+  <!-- Main App -->
+  <main class="app-main" id="appMain">
+
+    <!-- LEFT PANEL: Config -->
+    <aside class="panel panel-config" id="configPanel">
+      <div class="panel-header">
+        <div class="panel-header-icon config-icon">⚙️</div>
+        <h2 class="panel-title">Configuration</h2>
+        <button class="panel-collapse-btn" id="collapseConfig" title="Collapse panel">‹</button>
+      </div>
+      <div class="panel-body">
+
+        <!-- API Key -->
+        <section class="config-section">
+          <h3 class="section-label">
+            <span class="section-icon">🔑</span> API Key
+          </h3>
+          <div class="input-group">
+            <div class="input-wrapper secret">
+              <input type="password" id="apiKey" class="form-input" placeholder="Enter your Gemini API key…"
+                autocomplete="off" />
+              <button class="input-toggle-btn" id="toggleApiKey" title="Show/hide key">
+                <svg id="eyeOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg id="eyeClosed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" style="display:none">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <p class="input-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                class="link">aistudio.google.com</a></p>
+          </div>
+        </section>
+
+        <!-- Model Selection -->
+        <section class="config-section">
+          <h3 class="section-label">
+            <span class="section-icon">🤖</span> Model
+          </h3>
+          <div class="model-grid">
+            <button class="model-btn active" data-model="gemini-2.5-flash" id="modelFlash">
+              <span class="model-name">Gemini 2.5 Flash</span>
+              <span class="model-badge recommended">Recommended</span>
+            </button>
+            <button class="model-btn" data-model="gemini-2.5-pro" id="modelPro">
+              <span class="model-name">Gemini 2.5 Pro</span>
+              <span class="model-badge pro">Powerful</span>
+            </button>
+            <button class="model-btn" data-model="custom" id="modelCustom">
+              <span class="model-name">Custom</span>
+              <span class="model-badge custom">Any</span>
+            </button>
+          </div>
+          <input type="text" id="customModelId" class="form-input mt-2" placeholder="e.g. gpt-4o, gemma2:2b…"
+            style="display:none;" />
+        </section>
+
+        <!-- Prompt Description -->
+        <section class="config-section">
+          <h3 class="section-label">
+            <span class="section-icon">📝</span> Prompt Description
+          </h3>
+          <div class="prompt-templates-row">
+            <button class="template-chip active" data-template="literary">Literary</button>
+            <button class="template-chip" data-template="medical">Medical</button>
+            <button class="template-chip" data-template="news">News</button>
+            <button class="template-chip" data-template="custom">Custom</button>
+          </div>
+          <textarea id="promptDescription" class="form-textarea" rows="5" placeholder="Describe what to extract…">Extract characters, emotions, and relationships in order of appearance.
+Use exact text for extractions. Do not paraphrase or overlap entities.
+Provide meaningful attributes for each entity to add context.</textarea>
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: Input + Examples -->
+    <section class="panel panel-input">
+      <div class="panel-header">
+        <div class="panel-header-icon input-icon">✍️</div>
+        <h2 class="panel-title">Input &amp; Examples</h2>
+      </div>
+      <div class="panel-body">
+
+        <!-- Input Text -->
+        <div class="input-section">
+          <div class="section-row">
+            <h3 class="section-label"><span class="section-icon">📄</span> Text to Analyze</h3>
+            <div class="char-counter"><span id="charCount">0</span> chars</div>
+          </div>
+          <textarea id="inputText" class="form-textarea code-font" rows="7"
+            placeholder="Paste or type the text you want to analyze…">Lady Juliet gazed longingly at the stars, her heart aching for Romeo, whose absence filled her with a deep and melancholic yearning.</textarea>
+        </div>
+
+        <!-- Divider -->
+        <div class="section-divider">
+          <span>Few-Shot Examples <span class="badge-count" id="examplesCount">1</span></span>
+        </div>
+
+        <!-- Examples Container -->
+        <div id="examplesContainer" class="examples-container">
+          <!-- Example cards injected by JS -->
+        </div>
+
+        <button class="btn-secondary add-example-btn" id="addExampleBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Example
+        </button>
+
+        <!-- Extract Button -->
+        <div class="extract-footer">
+          <button class="btn-extract" id="extractBtn">
+            <span class="extract-btn-content">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              Run Extraction
+            </span>
+            <span class="extract-spinner" id="extractSpinner" style="display:none;">
+              <span class="spinner"></span>
+              Extracting…
+            </span>
+          </button>
+          <p class="extract-hint">Uses <span id="modelHint">gemini-2.5-flash</span> · Results appear on the right</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Results -->
+    <section class="panel panel-results" id="resultsPanel">
+      <div class="panel-header">
+        <div class="panel-header-icon results-icon">✨</div>
+        <h2 class="panel-title">Results</h2>
+        <div class="results-tabs" id="resultsTabs" style="display:none;">
+          <button class="results-tab active" data-tab="viz" id="tabViz">Visualization</button>
+          <button class="results-tab" data-tab="json" id="tabJson">JSON</button>
+        </div>
+      </div>
+      <div class="panel-body results-body">
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-illustration">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="14" width="52" height="44" rx="6" fill="#1e1e2e" stroke="#3b3b55" stroke-width="2" />
+              <rect x="18" y="22" width="28" height="3" rx="1.5" fill="#6366f1" opacity="0.6" />
+              <rect x="18" y="30" width="36" height="2" rx="1" fill="#4b4b6b" />
+              <rect x="18" y="36" width="30" height="2" rx="1" fill="#4b4b6b" />
+              <rect x="18" y="42" width="22" height="2" rx="1" fill="#4b4b6b" />
+              <circle cx="54" cy="50" r="11" fill="url(#emptyGrad)" opacity="0.9" />
+              <path d="M50 50l2.5 2.5L57 47" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <defs>
+                <linearGradient id="emptyGrad" x1="43" y1="39" x2="65" y2="61" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#6366f1" />
+                  <stop offset="1" stop-color="#8b5cf6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h3 class="empty-title">No extractions yet</h3>
+          <p class="empty-desc">Configure your prompt and examples, then click <strong>Run Extraction</strong> to see
+            structured results appear here.</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState" style="display:none;">
+          <div class="error-icon">⚠️</div>
+          <h3 class="error-title">Extraction failed</h3>
+          <p class="error-msg" id="errorMsg">An unknown error occurred.</p>
+          <button class="btn-secondary mt-2"
+            onclick="document.getElementById('errorState').style.display='none'; document.getElementById('emptyState').style.display='flex';">Dismiss</button>
+        </div>
+
+        <!-- Visualization Tab -->
+        <div id="tabVizContent" class="tab-content" style="display:none;">
+          <iframe id="vizFrame" class="viz-frame" title="Extraction Visualization"
+            sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+
+        <!-- JSON Tab -->
+        <div id="tabJsonContent" class="tab-content" style="display:none;">
+          <div class="json-toolbar">
+            <span class="json-label">Raw Extraction Result</span>
+            <button class="btn-copy" id="copyJsonBtn" title="Copy JSON">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre id="jsonOutput" class="json-output"></pre>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================
+       CLINICAL MODE — Full-width overlay panel
+       ============================================ -->
+  <main class="clinical-main" id="clinicalMain" style="display:none;">
+
+    <!-- Clinical Config (collapsible left) -->
+    <aside class="panel panel-config" id="clinicalConfigPanel">
+      <div class="panel-header">
+        <div class="panel-header-icon config-icon">⚙️</div>
+        <h2 class="panel-title">Configuration</h2>
+      </div>
+      <div class="panel-body">
+        <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">🔑</span> API Key</h3>
+          <div class="input-group">
+            <div class="input-wrapper secret">
+              <input type="password" id="clinicalApiKey" class="form-input" placeholder="Enter your Gemini API key…"
+                autocomplete="off" />
+              <button class="input-toggle-btn" id="toggleClinicalApiKey" title="Show/hide key">
+                <svg id="clinEyeOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg id="clinEyeClosed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" style="display:none">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <p class="input-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                rel="noopener noreferrer" class="link">aistudio.google.com</a></p>
+          </div>
+        </section>
+        <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">🤖</span> Model</h3>
+          <div class="model-grid">
+            <button class="model-btn active" data-clin-model="gemini-2.5-flash">
+              <span class="model-name">Gemini 2.5 Flash</span>
+              <span class="model-badge recommended">Recommended</span>
+            </button>
+            <button class="model-btn" data-clin-model="gemini-2.5-pro">
+              <span class="model-name">Gemini 2.5 Pro</span>
+              <span class="model-badge pro">Powerful</span>
+            </button>
+          </div>
+        </section>
+        <section class="config-section clinical-info-box">
+          <div class="info-box">
+            <div class="info-box-icon">🏥</div>
+            <div>
+              <div class="info-box-title">Clinical Extraction Mode</div>
+              <p class="info-box-desc">Paste a raw EMR note. The AI will remove administrative clutter and return a
+                structured clinical JSON — HPI, labs, meds, plan, and more.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Clinical Note Input -->
+    <section class="panel panel-clinical-input">
+      <div class="panel-header">
+        <div class="panel-header-icon" style="font-size:15px;">🏥</div>
+        <h2 class="panel-title">Raw EMR Note</h2>
+        <div class="char-counter" style="margin-left:auto;"><span id="clinCharCount">0</span> chars</div>
+      </div>
+      <div class="panel-body clinical-input-body">
+        <textarea id="clinicalNoteText" class="form-textarea code-font clinical-note-textarea"
+          placeholder="Paste the raw EMR note here…
+The AI will strip administrative clutter and return a structured clinical JSON with HPI, PMH, vitals, labs, imaging, plan, and more."></textarea>
+        <div class="extract-footer">
+          <button class="btn-extract" id="clinicalExtractBtn">
+            <span class="extract-btn-content" id="clinExtractContent">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
+              Clean &amp; Extract
+            </span>
+            <span class="extract-spinner" id="clinExtractSpinner" style="display:none;">
+              <span class="spinner"></span>
+              Processing note…
+            </span>
+          </button>
+          <p class="extract-hint">⌘+Enter to run · Uses <span id="clinModelHint">gemini-2.5-flash</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clinical Results -->
+    <section class="panel panel-results" id="clinicalResultsPanel">
+      <div class="panel-header">
+        <div class="panel-header-icon results-icon">✨</div>
+        <h2 class="panel-title">Structured Clinical Data</h2>
+        <div class="results-tabs" id="clinResultsTabs" style="display:none;">
+          <button class="results-tab active" data-clin-tab="cards" id="clinTabCards">Cards</button>
+          <button class="results-tab" data-clin-tab="json" id="clinTabJson">JSON</button>
+          <button class="btn-copy" id="clinCopyHistoriesBtn"
+            style="margin-left: auto; padding: 4px 10px; font-size: 12px; gap: 6px; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            Copy Histories
+          </button>
+        </div>
+      </div>
+      <div class="panel-body results-body">
+        <div class="empty-state" id="clinEmptyState">
+          <div class="empty-illustration">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+              <rect x="10" y="8" width="52" height="56" rx="6" fill="#1e1e2e" stroke="#3b3b55" stroke-width="2" />
+              <path d="M22 22h12M22 30h28M22 38h24M22 46h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round"
+                opacity="0.7" />
+              <circle cx="52" cy="54" r="11" fill="url(#clinGrad)" />
+              <path d="M48 54l2.5 2.5L56 49" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <defs>
+                <linearGradient id="clinGrad" x1="41" y1="43" x2="63" y2="65" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#14b8a6" />
+                  <stop offset="1" stop-color="#6366f1" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h3 class="empty-title">No note processed yet</h3>
+          <p class="empty-desc">Paste a raw EMR note and click <strong>Clean &amp; Extract</strong> to see structured
+            clinical data.</p>
+        </div>
+        <div class="error-state" id="clinErrorState" style="display:none;">
+          <div class="error-icon">⚠️</div>
+          <h3 class="error-title">Extraction failed</h3>
+          <p class="error-msg" id="clinErrorMsg">An unknown error occurred.</p>
+        </div>
+        <!-- Cards view -->
+        <div id="clinTabCardsContent" class="tab-content clin-cards-content" style="display:none;"></div>
+        <!-- JSON view -->
+        <div id="clinTabJsonContent" class="tab-content" style="display:none;">
+          <div class="json-toolbar">
+            <span class="json-label">Structured JSON Output</span>
+            <button class="btn-copy" id="clinCopyJsonBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre id="clinJsonOutput" class="json-output"></pre>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /clinical-main -->
+
+  <!-- STRUCTURED SCHEMA MAIN -->
+  <main class="app-main structured-main" id="structuredMain" style="display:none;">
+
+    <!-- LEFT PANEL: Schema Builder -->
+    <aside class="panel panel-config" id="structConfigPanel">
+      <div class="panel-header">
+        <div class="panel-header-icon config-icon">📋</div>
+        <h2 class="panel-title">Schema Builder</h2>
+      </div>
+      <div class="panel-body">
+
+        <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">🔑</span> API & Model</h3>
+          <div class="input-group">
+            <input type="password" id="structApiKey" class="form-input" placeholder="Google Gemini API key…"
+              autocomplete="off" />
+          </div>
+          <div class="model-grid mt-2">
+            <button class="model-btn active" data-model="gemini-2.5-flash" id="structModelFlash">Flash</button>
+            <button class="model-btn" data-model="gemini-2.5-pro" id="structModelPro">Pro</button>
+          </div>
+        </section>
+
+        <!-- Divider -->
+        <div class="section-divider">
+          <span>Schema Fields <span class="badge-count" id="structFieldCount">0</span></span>
+        </div>
+
+        <div id="structFieldsContainer" class="examples-container">
+          <!-- Dynamically injected fields go here -->
+        </div>
+
+        <button class="btn-secondary add-example-btn" id="structAddFieldBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Field
+        </button>
+
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: Input -->
+    <section class="panel panel-input">
+      <div class="panel-header">
+        <div class="panel-header-icon input-icon">✍️</div>
+        <h2 class="panel-title">Document Input</h2>
+      </div>
+      <div class="panel-body">
+        <div class="input-section">
+          <textarea id="structInputText" class="form-textarea code-font" rows="18"
+            placeholder="Paste document text here to extract data matching your schema..."></textarea>
+        </div>
+
+        <div class="extract-footer" style="margin-top:20px;">
+          <button class="btn-extract" id="structExtractBtn">
+            <span class="extract-btn-content">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              Extract Structured JSON
+            </span>
+            <span class="extract-spinner" id="structExtractSpinner" style="display:none;">
+              <span class="spinner"></span> Working…
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Results -->
+    <section class="panel panel-results">
+      <div class="panel-header">
+        <div class="panel-header-icon results-icon">✨</div>
+        <h2 class="panel-title">Extracted JSON</h2>
+        <button class="btn-copy" id="structCopyJsonBtn" style="display:none;">Copy</button>
+      </div>
+      <div class="panel-body results-body" style="background:#11111b; border-radius: 6px;">
+        <div class="empty-state" id="structEmptyState">
+          <div class="empty-illustration">
+            <span style="font-size:32px;">📊</span>
+          </div>
+          <h3 class="empty-title">Waiting for Extraction</h3>
+          <p class="empty-desc">Define your schema fields, paste text, and click Extract.</p>
+        </div>
+        <pre id="structJsonOutput" class="json-output" style="display:none; height:100%; border:none;"></pre>
+      </div>
+    </section>
+
+  </main><!-- /structured-main -->
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js?v=911183"></script>
+</body>
+
+</html>
