@@ -1015,3 +1015,400 @@ function registerClick(id, fn) {
     const el = $(id);
     if (el) el.addEventListener('click', fn);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HISTORY MODULE
+//  Saves every extraction run to localStorage (max 50 items).
+//  Allows replay by restoring inputs and results.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const HISTORY_KEY = 'lx_history_v1';
+const HISTORY_MAX = 50;
+
+function historyLoad() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch { return []; }
+}
+
+function historySave(items) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, HISTORY_MAX)));
+}
+
+function historyAdd(entry) {
+    const items = historyLoad();
+    items.unshift({ ...entry, id: Date.now(), ts: new Date().toISOString() });
+    historySave(items);
+}
+
+function historyRender() {
+    const list = document.getElementById('historyList');
+    if (!list) return;
+    const items = historyLoad();
+    if (!items.length) {
+        list.innerHTML = '<p class="history-empty">No extractions saved yet.</p>';
+        return;
+    }
+    list.innerHTML = items.map(item => `
+        <div class="history-item" data-id="${item.id}">
+            <div class="history-item-content">
+                <div class="history-item-title">${escapeHtml(item.title || 'Extraction')}</div>
+                <div class="history-item-meta">
+                    <span>${timeSince(item.ts)}</span>
+                    <span>${item.provider || 'gemini'} · ${item.model || ''}</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="history-item-badge">${item.mode || 'standard'}</span>
+                <button class="history-item-delete" data-del="${item.id}" title="Delete">✕</button>
+            </div>
+        </div>
+    `).join('');
+
+    list.querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+            if (e.target.closest('.history-item-delete')) return;
+            const id = Number(el.dataset.id);
+            historyReplay(items.find(i => i.id === id));
+        });
+    });
+    list.querySelectorAll('.history-item-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = Number(btn.dataset.del);
+            historySave(historyLoad().filter(i => i.id !== id));
+            historyRender();
+        });
+    });
+}
+
+function historyReplay(item) {
+    if (!item) return;
+    historyModalClose();
+
+    if (item.mode === 'clinical') {
+        // Switch to clinical mode and restore note
+        const clinBtn = document.getElementById('modeClinical');
+        if (clinBtn) clinBtn.click();
+        setTimeout(() => {
+            const ta = document.getElementById('clinicalNoteText');
+            if (ta) ta.value = item.inputText || '';
+        }, 100);
+    } else if (item.mode === 'structured') {
+        const structBtn = document.getElementById('modeStructured');
+        if (structBtn) structBtn.click();
+        setTimeout(() => {
+            const ta = document.getElementById('structInputText');
+            if (ta) ta.value = item.inputText || '';
+        }, 100);
+    } else {
+        // standard
+        const stdBtn = document.getElementById('modeStandard');
+        if (stdBtn) stdBtn.click();
+        setTimeout(() => {
+            const ta = document.getElementById('inputText');
+            if (ta) ta.value = item.inputText || '';
+            const promptEl = document.getElementById('promptDescription');
+            if (promptEl && item.prompt) promptEl.value = item.prompt;
+        }, 100);
+    }
+    showToast('Loaded from history — edit and re-run as needed', 'info');
+}
+
+function historyModalOpen() {
+    historyRender();
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.classList.add('open');
+}
+
+function historyModalClose() {
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.classList.remove('open');
+}
+
+function initHistory() {
+    document.getElementById('closeHistoryBtn')?.addEventListener('click', historyModalClose);
+    document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
+        if (!confirm('Clear all extraction history?')) return;
+        historySave([]);
+        historyRender();
+        showToast('History cleared', 'info');
+    });
+    document.getElementById('historyModal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('historyModal')) historyModalClose();
+    });
+    // Wire up all "open history" buttons across modes
+    document.querySelectorAll('#openHistoryBtn, #openHistoryBtnStd').forEach(btn => {
+        btn?.addEventListener('click', historyModalOpen);
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') historyModalClose();
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CLINICAL FILE UPLOAD MODULE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initClinicalFileUpload() {
+    const dropZone = document.getElementById('clinFileDropZone');
+    const fileInput = document.getElementById('clinFileInput');
+    const nameTag = document.getElementById('clinFileName');
+    const textarea = document.getElementById('clinicalNoteText');
+    if (!dropZone || !fileInput || !textarea) return;
+
+    async function uploadFile(file) {
+        if (!file) return;
+        const allowed = ['.txt', '.pdf', '.docx'];
+        const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
+        if (!allowed.includes(ext)) {
+            showToast(`Unsupported file type: ${ext}. Use .txt, .pdf, or .docx`, 'error');
+            return;
+        }
+        if (nameTag) nameTag.textContent = `�� ${file.name}`;
+        showToast(`Parsing ${file.name}…`, 'info');
+
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const resp = await fetch('/api/parse-file', { method: 'POST', body: formData });
+            if (!resp.ok) {
+                const err = await resp.json();
+                throw new Error(err.detail || 'Failed to parse file');
+            }
+            const data = await resp.json();
+            textarea.value = data.text;
+            textarea.dispatchEvent(new Event('input'));
+            if (data.pages) showToast(`Imported ${data.pages}-page PDF`, 'success');
+            else showToast(`Imported ${file.name}`, 'success');
+        } catch (e) {
+            showToast(e.message, 'error');
+            if (nameTag) nameTag.textContent = '';
+        }
+    }
+
+    fileInput.addEventListener('change', () => uploadFile(fileInput.files[0]));
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        uploadFile(e.dataTransfer.files[0]);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CSV EXPORT MODULE (Schema Mode)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _lastStructuredResult = null;   // cached for CSV export
+
+function initCsvExport() {
+    const btn = document.getElementById('structCsvBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+        if (!_lastStructuredResult) return;
+        // Wrap as array if single object
+        const rows = Array.isArray(_lastStructuredResult)
+            ? _lastStructuredResult
+            : [_lastStructuredResult];
+        try {
+            const resp = await fetch('/api/export-csv', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rows, filename: 'langextract_schema' })
+            });
+            if (!resp.ok) throw new Error('CSV export failed');
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'langextract_schema.csv';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+            showToast('CSV downloaded', 'success');
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  SCHEMA TEMPLATES MODULE
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SCHEMA_TEMPLATES = {
+    '': [],
+    invoice: [
+        { name: 'invoice_number', type: 'string', description: 'Invoice ID or number' },
+        { name: 'vendor', type: 'string', description: 'Vendor or supplier name' },
+        { name: 'date', type: 'string', description: 'Invoice date' },
+        { name: 'due_date', type: 'string', description: 'Payment due date' },
+        { name: 'total_amount', type: 'number', description: 'Total invoice amount' },
+        { name: 'currency', type: 'string', description: 'Currency code (e.g. USD)' },
+        { name: 'line_items', type: 'array', description: 'List of line items with description and amount' },
+    ],
+    resume: [
+        { name: 'full_name', type: 'string', description: 'Candidate full name' },
+        { name: 'email', type: 'string', description: 'Contact email address' },
+        { name: 'phone', type: 'string', description: 'Phone number' },
+        { name: 'skills', type: 'array', description: 'List of technical or professional skills' },
+        { name: 'work_experience', type: 'array', description: 'List of job roles with company, title, dates' },
+        { name: 'education', type: 'array', description: 'Degrees, institutions, years' },
+        { name: 'summary', type: 'string', description: 'Professional summary or objective' },
+    ],
+    contract: [
+        { name: 'parties', type: 'array', description: 'Parties involved in the contract' },
+        { name: 'effective_date', type: 'string', description: 'Contract effective date' },
+        { name: 'expiration_date', type: 'string', description: 'Contract expiration/end date' },
+        { name: 'governing_law', type: 'string', description: 'Governing law / jurisdiction' },
+        { name: 'payment_terms', type: 'string', description: 'Payment obligations and terms' },
+        { name: 'obligations', type: 'array', description: 'Key obligations of each party' },
+        { name: 'termination_clause', type: 'string', description: 'Conditions for termination' },
+    ],
+    medical: [
+        { name: 'patient_name', type: 'string', description: 'Patient full name' },
+        { name: 'dob', type: 'string', description: 'Patient date of birth' },
+        { name: 'diagnosis', type: 'array', description: 'List of diagnoses' },
+        { name: 'medications', type: 'array', description: 'Current medications with dosages' },
+        { name: 'allergies', type: 'array', description: 'Known allergies' },
+        { name: 'vital_signs', type: 'object', description: 'Vital signs (BP, HR, temp, etc.)' },
+        { name: 'attending_physician', type: 'string', description: 'Name of attending physician' },
+    ],
+    research: [
+        { name: 'title', type: 'string', description: 'Paper title' },
+        { name: 'authors', type: 'array', description: 'List of authors' },
+        { name: 'abstract', type: 'string', description: 'Abstract text' },
+        { name: 'keywords', type: 'array', description: 'Keywords/topics' },
+        { name: 'methodology', type: 'string', description: 'Research methodology' },
+        { name: 'findings', type: 'string', description: 'Key findings or results' },
+        { name: 'doi', type: 'string', description: 'DOI identifier' },
+        { name: 'publication_date', type: 'string', description: 'Publication date' },
+    ],
+    product: [
+        { name: 'product_name', type: 'string', description: 'Product name' },
+        { name: 'sku', type: 'string', description: 'SKU or product ID' },
+        { name: 'price', type: 'number', description: 'Price (numeric)' },
+        { name: 'currency', type: 'string', description: 'Currency code' },
+        { name: 'category', type: 'string', description: 'Product category' },
+        { name: 'description', type: 'string', description: 'Product description' },
+        { name: 'in_stock', type: 'boolean', description: 'Whether item is in stock' },
+        { name: 'rating', type: 'number', description: 'Average rating (0-5)' },
+    ],
+};
+
+function injectSchemaTemplatePicker() {
+    // Find the schema field list header and inject template picker just above it
+    const schemaSection = document.querySelector('.structured-main .panel-config .panel-body');
+    if (!schemaSection) return;
+    const existing = document.getElementById('schemaTemplatePicker');
+    if (existing) return;
+
+    const row = document.createElement('div');
+    row.className = 'schema-template-row';
+    row.innerHTML = `
+        <label class="schema-template-label" for="schemaTemplatePicker">Template:</label>
+        <select class="schema-template-select" id="schemaTemplatePicker" aria-label="Schema template">
+            <option value="">— blank —</option>
+            <option value="invoice">📄 Invoice</option>
+            <option value="resume">👤 Resume</option>
+            <option value="contract">📝 Contract</option>
+            <option value="medical">🏥 Medical Record</option>
+            <option value="research">🔬 Research Paper</option>
+            <option value="product">📦 Product</option>
+        </select>
+    `;
+    // Insert before the first config-section or at top of panel body
+    const firstSection = schemaSection.querySelector('.config-section');
+    if (firstSection) {
+        schemaSection.insertBefore(row, firstSection);
+    } else {
+        schemaSection.prepend(row);
+    }
+
+    document.getElementById('schemaTemplatePicker').addEventListener('change', (e) => {
+        const fields = SCHEMA_TEMPLATES[e.target.value];
+        if (!fields) return;
+        if (state.schemaFields.length > 0 && !confirm('Replace current fields with template?')) return;
+        state.schemaFields = fields.map(f => ({ ...f }));
+        // Re-render the schema fields table (call existing renderer if available)
+        if (typeof renderSchemaFields === 'function') renderSchemaFields();
+        showToast(`Loaded ${e.target.value || 'blank'} template`, 'success');
+        e.target.value = ''; // reset picker
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PATCH: Intercept extraction functions to save to history & track CSV data
+// ═══════════════════════════════════════════════════════════════════════════
+
+(function patchExtractionForHistory() {
+    // We monkey-patch after the page loads so we get the final versions of fns
+    const _origDocLoaded = document.addEventListener.bind(document);
+    window.addEventListener('load', () => {
+        // Initialize new modules
+        initHistory();
+        initClinicalFileUpload();
+        initCsvExport();
+        injectSchemaTemplatePicker();
+
+        // Patch structuredExtraction to track last result and show CSV btn
+        const origStructBtn = document.getElementById('structExtractBtn');
+        if (origStructBtn) {
+            origStructBtn.addEventListener('click', () => {
+                // After extraction completes, observe output element
+                const output = document.getElementById('structJsonOutput');
+                if (!output) return;
+                const obs = new MutationObserver(() => {
+                    if (output.textContent.trim()) {
+                        try {
+                            _lastStructuredResult = JSON.parse(output.textContent);
+                            const csvBtn = document.getElementById('structCsvBtn');
+                            if (csvBtn) csvBtn.style.display = 'inline-flex';
+                            historyAdd({
+                                mode: 'structured',
+                                title: `Schema: ${(state.schemaFields[0]?.name || 'extract')}…`,
+                                inputText: document.getElementById('structInputText')?.value || '',
+                                provider: state.provider,
+                                model: state.selectedModel,
+                            });
+                        } catch { /* ignore parse error */ }
+                        obs.disconnect();
+                    }
+                });
+                obs.observe(output, { childList: true, characterData: true, subtree: true });
+            }, { capture: true });
+        }
+
+        // Patch Copy / history for structured JSON output
+        const copyStructBtn = document.getElementById('structCopyJsonBtn');
+        if (copyStructBtn) {
+            copyStructBtn.addEventListener('click', () => {
+                const output = document.getElementById('structJsonOutput');
+                if (output) {
+                    navigator.clipboard.writeText(output.textContent).then(() => showToast('Copied', 'success'));
+                }
+            });
+        }
+    });
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function timeSince(iso) {
+    const diff = (Date.now() - new Date(iso)) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}

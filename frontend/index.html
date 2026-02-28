@@ -396,65 +396,62 @@ Provide meaningful attributes for each entity to add context.</textarea>
       </div>
       <div class="panel-body">
         <section class="config-section">
-          <h3 class="section-label"><span class="section-icon">🔑</span> API Key</h3>
-          <div class="input-group">
-            <div class="input-wrapper secret">
-              <input type="password" id="clinicalApiKey" class="form-input" placeholder="Enter your Gemini API key…"
-                autocomplete="off" />
-              <button class="input-toggle-btn" id="toggleClinicalApiKey" title="Show/hide key">
-                <svg id="clinEyeOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <svg id="clinEyeClosed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" style="display:none">
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              </button>
+          <div class="info-box">
+            <div class="info-box-icon">🏥</div>
+            <div>
+              <div class="info-box-title">Clinical Mode</div>
+              <p class="info-box-desc">Uses the provider, key, and model selected in Standards mode config. Switch back
+                to configure.</p>
             </div>
-            <p class="input-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank"
-                rel="noopener noreferrer" class="link">aistudio.google.com</a></p>
-          </div>
-        </section>
-        <section class="config-section">
-          <h3 class="section-label"><span class="section-icon">🤖</span> Model</h3>
-          <div class="model-grid">
-            <button class="model-btn active" data-clin-model="gemini-2.5-flash">
-              <span class="model-name">Gemini 2.5 Flash</span>
-              <span class="model-badge recommended">Recommended</span>
-            </button>
-            <button class="model-btn" data-clin-model="gemini-2.5-pro">
-              <span class="model-name">Gemini 2.5 Pro</span>
-              <span class="model-badge pro">Powerful</span>
-            </button>
           </div>
         </section>
         <section class="config-section clinical-info-box">
           <div class="info-box">
-            <div class="info-box-icon">🏥</div>
+            <div class="info-box-icon">📁</div>
             <div>
-              <div class="info-box-title">Clinical Extraction Mode</div>
-              <p class="info-box-desc">Paste a raw EMR note. The AI will remove administrative clutter and return a
-                structured clinical JSON — HPI, labs, meds, plan, and more.</p>
+              <div class="info-box-title">File Upload</div>
+              <p class="info-box-desc">Drag a PDF, DOCX, or TXT file onto the note area to auto-import its text.</p>
             </div>
           </div>
+        </section>
+
+        <!-- History shortcut -->
+        <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">🕐</span> Recent Extractions</h3>
+          <button class="btn-secondary" id="openHistoryBtn" style="width:100%">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 .49-3.74" />
+            </svg>
+            View History
+          </button>
         </section>
       </div>
     </aside>
 
-    <!-- Clinical Note Input -->
     <section class="panel panel-clinical-input">
       <div class="panel-header">
-        <div class="panel-header-icon" style="font-size:15px;">🏥</div>
+        <div class="panel-header-icon">🏥</div>
         <h2 class="panel-title">Raw EMR Note</h2>
         <div class="char-counter" style="margin-left:auto;"><span id="clinCharCount">0</span> chars</div>
       </div>
       <div class="panel-body clinical-input-body">
+        <!-- File drop zone -->
+        <div id="clinFileDropZone" class="file-drop-zone">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>Drop PDF, DOCX, or TXT here</span>
+          <label class="file-select-btn">
+            Browse
+            <input type="file" id="clinFileInput" accept=".txt,.pdf,.docx" hidden />
+          </label>
+          <span id="clinFileName" class="file-name-tag"></span>
+        </div>
         <textarea id="clinicalNoteText" class="form-textarea code-font clinical-note-textarea"
-          placeholder="Paste the raw EMR note here…
+          placeholder="Paste the raw EMR note here, or drop a file above…
 The AI will strip administrative clutter and return a structured clinical JSON with HPI, PMH, vitals, labs, imaging, plan, and more."></textarea>
         <div class="extract-footer">
           <button class="btn-extract" id="clinicalExtractBtn">
@@ -616,7 +613,17 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       <div class="panel-header">
         <div class="panel-header-icon results-icon">✨</div>
         <h2 class="panel-title">Extracted JSON</h2>
-        <button class="btn-copy" id="structCopyJsonBtn" style="display:none;">Copy</button>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <button class="btn-copy" id="structCsvBtn" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            CSV
+          </button>
+          <button class="btn-copy" id="structCopyJsonBtn" style="display:none;">Copy</button>
+        </div>
       </div>
       <div class="panel-body results-body" style="background:#11111b; border-radius: 6px;">
         <div class="empty-state" id="structEmptyState">
@@ -635,7 +642,24 @@ The AI will strip administrative clutter and return a structured clinical JSON w
   <!-- Toast Notifications -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=911183"></script>
+
+  <!-- ── History Modal ──────────────────────────────────────────── -->
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2>&#x1F550; Extraction History</h2>
+        <div class="modal-header-actions">
+          <button class="btn-secondary btn-sm" id="clearHistoryBtn">Clear All</button>
+          <button class="btn-icon" id="closeHistoryBtn" title="Close">&times;</button>
+        </div>
+      </div>
+      <div id="historyList" class="history-list">
+        <p class="history-empty">No extractions saved yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=951012"></script>
 </body>
 
 </html>

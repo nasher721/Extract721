@@ -2,11 +2,14 @@ import os
 import json
 import tempfile
 import re
+import time
+import asyncio
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, SecretStr
 from typing import List, Dict, Any, Optional
 
 import langextract as lx
@@ -17,10 +20,15 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 app = FastAPI()
 
-# Enable CORS for local dev
+# CORS: allow same-origin + localhost dev. Never wildcard with credentials.
+_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:8000,http://127.0.0.1:8000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -204,7 +212,33 @@ def clean_json_response(raw: str) -> dict:
     """Strip markdown fences and parse JSON from LLM output."""
     clean = re.sub(r'^```(?:json)?\s*', '', raw, flags=re.MULTILINE)
     clean = re.sub(r'\s*```$', '', clean, flags=re.MULTILINE)
-    return json.loads(clean.strip())
+    try:
+        return json.loads(clean.strip())
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Model returned invalid JSON — could not parse response: {e}"
+        )
+
+
+def call_llm_with_retry(prompt: str, provider: str, model_id: str, api_key: str,
+                        json_mode: bool = False, max_retries: int = 3) -> str:
+    """call_llm wrapper with exponential backoff on 429/503."""
+    delay = 2.0
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            return call_llm(prompt, provider, model_id, api_key, json_mode=json_mode)
+        except Exception as e:
+            msg = str(e).lower()
+            if any(code in msg for code in ("429", "rate", "503", "overloaded")):
+                last_err = e
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+                    delay *= 2
+            else:
+                raise
+    raise HTTPException(status_code=429, detail=f"Provider rate-limited after {max_retries} retries: {last_err}")
 
 
 # ─── Request / Response Models ────────────────────────────────────────────────
@@ -223,13 +257,13 @@ class ExtractRequest(BaseModel):
     prompt: str
     examples: List[ExampleParam]
     model_id: str = "gemini-2.5-flash"
-    api_key: str
+    api_key: SecretStr
     provider: str = "gemini"
 
 class ClinicalExtractRequest(BaseModel):
     note_text: str
     model_id: str = "gemini-2.5-flash"
-    api_key: str
+    api_key: SecretStr
     provider: str = "gemini"
 
 class SchemaField(BaseModel):
@@ -241,7 +275,7 @@ class StructuredExtractRequest(BaseModel):
     text: str
     extraction_schema: List[SchemaField]
     model_id: str = "gemini-2.5-flash"
-    api_key: str
+    api_key: SecretStr
     provider: str = "gemini"
 
 # ─── Provider Catalogue Endpoint ──────────────────────────────────────────────
@@ -277,7 +311,7 @@ async def extract_data(req: ExtractRequest):
                 prompt_description=req.prompt,
                 examples=lx_examples,
                 model_id=req.model_id,
-                api_key=req.api_key
+                api_key=req.api_key.get_secret_value()
             )
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -310,7 +344,7 @@ TEXT TO ANALYZE:
 
 Return ONLY valid JSON, no markdown fences."""
 
-            raw = call_llm(prompt, req.provider, req.model_id, req.api_key, json_mode=True)
+            raw = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value(), json_mode=True)
             try:
                 parsed = json.loads(raw) if isinstance(raw, str) else raw
             except Exception:
@@ -332,7 +366,7 @@ Return ONLY valid JSON, no markdown fences."""
 async def clinical_extract(req: ClinicalExtractRequest):
     try:
         prompt = CLINICAL_PROMPT_TEMPLATE.format(note_text=req.note_text)
-        raw_text = call_llm(prompt, req.provider, req.model_id, req.api_key)
+        raw_text = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value())
 
         try:
             structured = clean_json_response(raw_text)
@@ -362,7 +396,7 @@ async def clinical_extract_stream(req: ClinicalExtractRequest):
         prompt = CLINICAL_PROMPT_TEMPLATE.format(note_text=req.note_text)
 
         if req.provider == "gemini":
-            genai.configure(api_key=req.api_key)
+            genai.configure(api_key=req.api_key.get_secret_value())
             model = genai.GenerativeModel(req.model_id)
             response = model.generate_content(prompt, stream=True)
 
@@ -377,7 +411,7 @@ async def clinical_extract_stream(req: ClinicalExtractRequest):
 
         else:
             # Non-Gemini: get full response then emit as one chunk
-            full_text = call_llm(prompt, req.provider, req.model_id, req.api_key)
+            full_text = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value())
 
             async def sse_generator():
                 yield f"data: {json.dumps({'chunk': full_text})}\n\n"
@@ -413,8 +447,8 @@ RULES:
 """
         full_prompt = f"{system_prompt}\n\nTEXT TO PROCESS:\n{req.text}"
 
-        use_json_mode = req.provider == "gemini"
-        raw = call_llm(full_prompt, req.provider, req.model_id, req.api_key, json_mode=use_json_mode)
+        use_json_mode = req.provider in ("gemini", "openai")
+        raw = call_llm_with_retry(full_prompt, req.provider, req.model_id, req.api_key.get_secret_value(), json_mode=use_json_mode)
 
         try:
             structured = json.loads(raw) if isinstance(raw, str) else raw
@@ -423,9 +457,137 @@ RULES:
 
         return {"success": True, "data": structured}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Extraction Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── File Parse Endpoint (PDF / DOCX / TXT) ────────────────────────────────────
+
+@app.post("/api/parse-file")
+async def parse_file(file: UploadFile = File(...)):
+    """Extract plain text from an uploaded PDF, DOCX, or TXT file."""
+    filename = (file.filename or "").lower()
+    try:
+        content = await file.read()
+        if filename.endswith(".txt"):
+            return {"text": content.decode("utf-8", errors="replace"), "filename": file.filename}
+
+        elif filename.endswith(".pdf"):
+            try:
+                import pdfplumber
+            except ImportError:
+                raise HTTPException(status_code=422, detail="pdfplumber not installed. Run: pip install pdfplumber")
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            pages = []
+            with pdfplumber.open(tmp_path) as pdf:
+                for page in pdf.pages:
+                    pages.append(page.extract_text() or "")
+            os.unlink(tmp_path)
+            return {"text": "\n\n".join(pages), "filename": file.filename, "pages": len(pages)}
+
+        elif filename.endswith(".docx"):
+            try:
+                from docx import Document as DocxDocument
+            except ImportError:
+                raise HTTPException(status_code=422, detail="python-docx not installed. Run: pip install python-docx")
+            with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            doc = DocxDocument(tmp_path)
+            os.unlink(tmp_path)
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            return {"text": "\n\n".join(paragraphs), "filename": file.filename}
+
+        else:
+            raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.filename}. Supported: .txt, .pdf, .docx")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
+
+
+# ─── Batch Extraction Endpoint ─────────────────────────────────────────────────
+
+class BatchExtractItem(BaseModel):
+    id: str
+    text: str
+
+class BatchExtractRequest(BaseModel):
+    items: List[BatchExtractItem]
+    prompt: str
+    extraction_schema: List[SchemaField]
+    model_id: str = "gemini-2.5-flash"
+    api_key: SecretStr
+    provider: str = "gemini"
+
+@app.post("/api/extract-batch")
+async def extract_batch(req: BatchExtractRequest):
+    """Run schema-based extraction over multiple texts in parallel."""
+    schema_desc = "\n".join(
+        f"- {f.name} ({f.type}): {f.description}"
+        for f in req.extraction_schema
+    )
+    system_prompt = f"""You are a precision data extraction engine.
+Extract the following fields from the text and return ONLY valid JSON (no markdown fences).
+If a field is not found, use null.
+
+FIELDS:
+{schema_desc}
+"""
+
+    key = req.api_key.get_secret_value()
+    use_json = req.provider in ("gemini", "openai")
+
+    async def process_one(item: BatchExtractItem) -> dict:
+        full_prompt = f"{system_prompt}\n\nTEXT:\n{item.text}"
+        try:
+            raw = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: call_llm_with_retry(full_prompt, req.provider, req.model_id, key, json_mode=use_json)
+            )
+            try:
+                data = json.loads(raw) if isinstance(raw, str) else raw
+            except json.JSONDecodeError:
+                data = clean_json_response(raw)
+            return {"id": item.id, "success": True, "data": data}
+        except Exception as e:
+            return {"id": item.id, "success": False, "error": str(e), "data": {}}
+
+    tasks = [process_one(item) for item in req.items]
+    results = await asyncio.gather(*tasks)
+    return {"results": list(results)}
+
+
+# ─── CSV Export Helper ─────────────────────────────────────────────────────────
+
+class ExportCSVRequest(BaseModel):
+    rows: List[Dict[str, Any]]
+    filename: str = "langextract_export"
+
+@app.post("/api/export-csv")
+async def export_csv(req: ExportCSVRequest):
+    """Convert a list of dicts to a CSV file download."""
+    import csv
+    import io
+    if not req.rows:
+        raise HTTPException(status_code=400, detail="No rows to export")
+    buf = io.StringIO()
+    fieldnames = list(req.rows[0].keys())
+    writer = csv.DictWriter(buf, fieldnames=fieldnames, extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(req.rows)
+    buf.seek(0)
+    safe_name = re.sub(r'[^\w\-]', '_', req.filename)
+    return StreamingResponse(
+        iter([buf.read()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{safe_name}.csv"'}
+    )
 
 
 # Mount frontend
