@@ -395,22 +395,36 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <h2 class="panel-title">Configuration</h2>
       </div>
       <div class="panel-body">
+
+        <!-- Live Provider Badge -->
         <section class="config-section">
-          <div class="info-box">
-            <div class="info-box-icon">🏥</div>
-            <div>
-              <div class="info-box-title">Clinical Mode</div>
-              <p class="info-box-desc">Uses the provider, key, and model selected in Standards mode config. Switch back
-                to configure.</p>
+          <h3 class="section-label"><span class="section-icon">🤖</span> Active Provider</h3>
+          <div class="provider-active-badge" id="clinProviderBadge">
+            <span class="pab-icon" id="clinProviderIcon">G</span>
+            <div class="pab-info">
+              <div class="pab-name" id="clinProviderName">Gemini</div>
+              <div class="pab-model" id="clinProviderModel">gemini-2.5-flash</div>
             </div>
+            <button class="pab-change" id="clinChangeProviderBtn" title="Change provider">⚙︎</button>
           </div>
         </section>
-        <section class="config-section clinical-info-box">
+
+        <!-- Clinical Note Stats -->
+        <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">📊</span> Note Stats</h3>
+          <div class="note-stats-grid">
+            <div class="note-stat"><span id="clinWordCount">0</span><small>words</small></div>
+            <div class="note-stat"><span id="clinLineCount">0</span><small>lines</small></div>
+          </div>
+        </section>
+
+        <!-- File Upload hint -->
+        <section class="config-section">
           <div class="info-box">
             <div class="info-box-icon">📁</div>
             <div>
               <div class="info-box-title">File Upload</div>
-              <p class="info-box-desc">Drag a PDF, DOCX, or TXT file onto the note area to auto-import its text.</p>
+              <p class="info-box-desc">Drop PDF, DOCX, or TXT onto the note area to import text directly.</p>
             </div>
           </div>
         </section>
@@ -426,6 +440,7 @@ Provide meaningful attributes for each entity to add context.</textarea>
             View History
           </button>
         </section>
+
       </div>
     </aside>
 
@@ -549,15 +564,16 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       <div class="panel-body">
 
         <section class="config-section">
-          <h3 class="section-label"><span class="section-icon">🔑</span> API & Model</h3>
-          <div class="input-group">
-            <input type="password" id="structApiKey" class="form-input" placeholder="Google Gemini API key…"
-              autocomplete="off" />
+          <h3 class="section-label"><span class="section-icon">🤖</span> Active Provider</h3>
+          <div class="provider-active-badge" id="structProviderBadge">
+            <span class="pab-icon" id="structProviderIcon">G</span>
+            <div class="pab-info">
+              <div class="pab-name" id="structProviderName">Gemini</div>
+              <div class="pab-model" id="structProviderModel">gemini-2.5-flash</div>
+            </div>
+            <button class="pab-change" id="structChangeProviderBtn" title="Change provider">⚙︎</button>
           </div>
-          <div class="model-grid mt-2">
-            <button class="model-btn active" data-model="gemini-2.5-flash" id="structModelFlash">Flash</button>
-            <button class="model-btn" data-model="gemini-2.5-pro" id="structModelPro">Pro</button>
-          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Provider &amp; key set in Standard mode config.</p>
         </section>
 
         <!-- Divider -->
@@ -592,6 +608,11 @@ The AI will strip administrative clutter and return a structured clinical JSON w
             placeholder="Paste document text here to extract data matching your schema..."></textarea>
         </div>
 
+        <!-- Word / char counter for structured input -->
+        <div class="struct-input-stats">
+          <span id="structWordCount">0</span> words · <span id="structCharCount">0</span> chars
+        </div>
+
         <div class="extract-footer" style="margin-top:20px;">
           <button class="btn-extract" id="structExtractBtn">
             <span class="extract-btn-content">
@@ -604,6 +625,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
               <span class="spinner"></span> Working…
             </span>
           </button>
+          <p class="extract-hint">Uses <span id="structProviderHint">gemini · gemini-2.5-flash</span></p>
         </div>
       </div>
     </section>

@@ -1695,6 +1695,116 @@ select.form-input {
         min-height: 500px;
     }
 }
+
+/* -------------------------------------
+   Provider Active Badge & Stats
+   ------------------------------------- */
+
+.provider-active-badge {
+    display: flex;
+    align-items: center;
+    background: var(--surface-light);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.pab-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pab-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pab-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pab-model {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pab-change {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pab-change:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.note-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.note-stat {
+    background: var(--surface-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.note-stat span {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.note-stat small {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.struct-input-stats {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    NEW FEATURES: File Drop Zone, History Modal, Schema Templates, CSV Btn
    ────────────────────────────────────────────────────────────────────────── */
@@ -1715,12 +1825,18 @@ select.form-input {
     font-size: 13px;
     color: var(--text-secondary);
 }
+
 .file-drop-zone.drag-over {
     border-color: var(--accent-primary);
-    background: rgba(99,102,241,0.08);
+    background: rgba(99, 102, 241, 0.08);
     color: var(--text-primary);
 }
-.file-drop-zone svg { flex-shrink: 0; color: var(--text-muted); }
+
+.file-drop-zone svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
 .file-select-btn {
     padding: 4px 12px;
     border-radius: var(--radius-sm);
@@ -1732,7 +1848,11 @@ select.form-input {
     cursor: pointer;
     transition: background var(--transition);
 }
-.file-select-btn:hover { background: var(--bg-hover); }
+
+.file-select-btn:hover {
+    background: var(--bg-hover);
+}
+
 .file-name-tag {
     font-size: 12px;
     color: var(--accent-primary);
@@ -1748,15 +1868,17 @@ select.form-input {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.72);
+    background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(6px);
     z-index: 1000;
     align-items: center;
     justify-content: center;
 }
+
 .modal-overlay.open {
     display: flex;
 }
+
 .modal-panel {
     background: var(--bg-panel);
     border: 1px solid var(--border);
@@ -1765,9 +1887,10 @@ select.form-input {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
     overflow: hidden;
 }
+
 .modal-header {
     display: flex;
     align-items: center;
@@ -1775,6 +1898,7 @@ select.form-input {
     padding: 18px 24px;
     border-bottom: 1px solid var(--border-subtle);
 }
+
 .modal-header h2 {
     font-family: var(--font-display);
     font-size: 16px;
@@ -1782,11 +1906,13 @@ select.form-input {
     color: var(--text-primary);
     margin: 0;
 }
+
 .modal-header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
 .btn-icon {
     background: transparent;
     border: none;
@@ -1798,8 +1924,16 @@ select.form-input {
     border-radius: var(--radius-sm);
     transition: color var(--transition), background var(--transition);
 }
-.btn-icon:hover { color: var(--text-primary); background: var(--bg-hover); }
-.btn-sm { font-size: 12px; padding: 4px 12px; }
+
+.btn-icon:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.btn-sm {
+    font-size: 12px;
+    padding: 4px 12px;
+}
 
 /* History List */
 .history-list {
@@ -1810,12 +1944,14 @@ select.form-input {
     flex-direction: column;
     gap: 8px;
 }
+
 .history-empty {
     text-align: center;
     color: var(--text-muted);
     font-size: 13px;
     padding: 32px;
 }
+
 .history-item {
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
@@ -1828,11 +1964,17 @@ select.form-input {
     justify-content: space-between;
     gap: 10px;
 }
+
 .history-item:hover {
     border-color: var(--accent-primary);
     background: var(--bg-hover);
 }
-.history-item-content { flex: 1; min-width: 0; }
+
+.history-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
 .history-item-title {
     font-size: 13px;
     font-weight: 500;
@@ -1842,21 +1984,24 @@ select.form-input {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .history-item-meta {
     font-size: 11px;
     color: var(--text-muted);
     display: flex;
     gap: 10px;
 }
+
 .history-item-badge {
     font-size: 10px;
     padding: 2px 7px;
     border-radius: 20px;
-    background: rgba(99,102,241,0.15);
+    background: rgba(99, 102, 241, 0.15);
     color: var(--accent-primary);
     font-weight: 600;
     white-space: nowrap;
 }
+
 .history-item-delete {
     background: transparent;
     border: none;
@@ -1868,9 +2013,10 @@ select.form-input {
     transition: color var(--transition), background var(--transition);
     flex-shrink: 0;
 }
+
 .history-item-delete:hover {
     color: var(--accent-rose);
-    background: rgba(244,63,94,0.1);
+    background: rgba(244, 63, 94, 0.1);
 }
 
 /* Schema Template Picker */
@@ -1880,11 +2026,13 @@ select.form-input {
     gap: 8px;
     margin-bottom: 6px;
 }
+
 .schema-template-label {
     font-size: 12px;
     color: var(--text-muted);
     white-space: nowrap;
 }
+
 .schema-template-select {
     flex: 1;
     background: var(--bg-input);
@@ -1896,7 +2044,11 @@ select.form-input {
     font-family: var(--font-sans);
     cursor: pointer;
 }
-.schema-template-select:focus { outline: none; border-color: var(--border-focus); }
+
+.schema-template-select:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
 
 /* Open History button in clinical sidebar */
 #openHistoryBtn {
@@ -1905,4 +2057,3 @@ select.form-input {
     gap: 8px;
     font-size: 13px;
 }
-

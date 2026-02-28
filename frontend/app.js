@@ -105,6 +105,40 @@ function getActiveKey() {
     return state.apiKeys[state.provider] || '';
 }
 
+function updateProviderBadges(provider, model) {
+    const providerNames = {
+        'gemini': 'Gemini',
+        'openai': 'OpenAI',
+        'claude': 'Claude',
+        'glm': 'GLM'
+    };
+    const providerIcons = {
+        'gemini': 'G',
+        'openai': 'O',
+        'claude': 'C',
+        'glm': 'Z'
+    };
+
+    // Clinical badge
+    const clinIcon = $('clinProviderIcon');
+    if (clinIcon) clinIcon.textContent = providerIcons[provider] || 'G';
+    const clinName = $('clinProviderName');
+    if (clinName) clinName.textContent = providerNames[provider] || 'Gemini';
+    const clinModel = $('clinProviderModel');
+    if (clinModel) clinModel.textContent = model || '';
+
+    // Structured badge
+    const structIcon = $('structProviderIcon');
+    if (structIcon) structIcon.textContent = providerIcons[provider] || 'G';
+    const structName = $('structProviderName');
+    if (structName) structName.textContent = providerNames[provider] || 'Gemini';
+    const structModel = $('structProviderModel');
+    if (structModel) structModel.textContent = model || '';
+
+    const structHint = $('structProviderHint');
+    if (structHint) structHint.textContent = `${providerNames[provider]} · ${model}`;
+}
+
 function switchProvider(provider) {
     state.provider = provider;
     localStorage.setItem('lx_provider', provider);
@@ -138,6 +172,7 @@ function switchProvider(provider) {
             const hint = $('modelHint');
             if (hint) hint.textContent = opts[0].value;
         }
+        updateProviderBadges(state.provider, state.selectedModel);
     }
 }
 
@@ -185,6 +220,7 @@ function initConfig() {
             state.structModel = modelSel.value;
             const hint = $('modelHint');
             if (hint) hint.textContent = modelSel.value;
+            updateProviderBadges(state.provider, state.selectedModel);
         });
     }
 
@@ -201,6 +237,49 @@ function initConfig() {
         modelSel.addEventListener('change', () => {
             localStorage.setItem('lx_model', modelSel.value);
         });
+    }
+
+    // Change provider buttons
+    const switchToStandard = () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        const stdTab = document.querySelector('.mode-tab[data-mode="standard"]');
+        if (stdTab) stdTab.classList.add('active');
+        $('standardMain').style.display = 'flex';
+        $('clinicalMain').style.display = 'none';
+        $('structuredMain').style.display = 'none';
+        state.mode = 'standard';
+    };
+
+    const clinChangeBtn = $('clinChangeProviderBtn');
+    if (clinChangeBtn) clinChangeBtn.addEventListener('click', switchToStandard);
+
+    const structChangeBtn = $('structChangeProviderBtn');
+    if (structChangeBtn) structChangeBtn.addEventListener('click', switchToStandard);
+
+    // Text stats helpers
+    function updateTextStats(text, wordId, charId, lineId) {
+        const charEl = $(charId);
+        const wordEl = $(wordId);
+        const lineEl = $(lineId);
+
+        if (charEl) charEl.textContent = text.length.toLocaleString();
+
+        if (wordEl || lineEl) {
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const lines = text.length > 0 ? text.split('\n').length : 0;
+            if (wordEl) wordEl.textContent = words.toLocaleString();
+            if (lineEl) lineEl.textContent = lines.toLocaleString();
+        }
+    }
+
+    const clinInput = $('clinicalNoteText');
+    if (clinInput) {
+        clinInput.addEventListener('input', () => updateTextStats(clinInput.value, 'clinWordCount', 'clinCharCount', 'clinLineCount'));
+    }
+
+    const structInput = $('structInputText');
+    if (structInput) {
+        structInput.addEventListener('input', () => updateTextStats(structInput.value, 'structWordCount', 'structCharCount', null));
     }
 }
 
@@ -959,14 +1038,14 @@ async function runStructuredExtraction() {
     }
 
     const btn = $('structExtractBtn');
-    const spinner = btn.querySelector('.spinner');
-    const btnText = btn.querySelector('.btn-text');
+    const spinner = $('structExtractSpinner');
+    const btnContent = btn.querySelector('.extract-btn-content');
     const output = $('structJsonOutput');
 
     setStatus('loading', 'Extracting structured data...');
     btn.disabled = true;
-    if (spinner) spinner.style.display = 'inline-block';
-    if (btnText) btnText.textContent = 'Extracting...';
+    if (spinner) spinner.style.display = 'inline-flex';
+    if (btnContent) btnContent.style.display = 'none';
     output.style.display = 'none';
 
     try {
@@ -997,6 +1076,16 @@ async function runStructuredExtraction() {
         setStatus('success', 'Structured extraction complete');
         showToast('Structured extraction complete', 'success');
 
+        saveToHistory({
+            mode: 'structured',
+            provider: state.provider,
+            model: state.structModel,
+            inputSnippet: text.substring(0, 100),
+            promptText: `Schema Fields: ${state.schemaFields.length}`,
+            rawResult: JSON.stringify(result.data, null, 2),
+            timestamp: new Date().toISOString()
+        });
+
     } catch (error) {
         console.error('Structured Extraction Error:', error);
         setStatus('error', error.message);
@@ -1005,7 +1094,7 @@ async function runStructuredExtraction() {
         setStatus('success', 'Ready');
         btn.disabled = false;
         if (spinner) spinner.style.display = 'none';
-        if (btnText) btnText.textContent = 'Run Structured Extraction';
+        if (btnContent) btnContent.style.display = 'inline-flex';
     }
 }
 
