@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,6 @@ This module provides backward compatibility for the schema module.
 New code should import from langextract.core.schema instead.
 """
 
-from __future__ import annotations
 
 # Re-export core schema items with deprecation warnings
 import warnings

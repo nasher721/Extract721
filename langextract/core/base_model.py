@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +14,11 @@
 # limitations under the License.
 
 """Base interfaces for language models."""
-from __future__ import annotations
 
 import abc
 from collections.abc import Iterator, Sequence
 import json
-from typing import Any, Mapping
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any, Mapping
 
 import yaml
 
@@ -35,7 +35,7 @@ class BaseLanguageModel(abc.ABC):
     _constraint: A `Constraint` object specifying constraints for model output.
   """
 
-  def __init__(self, constraint: types.Constraint | None = None, **kwargs: Any):
+  def __init__(self, constraint: Optional[types.Constraint] = None, **kwargs: Any):
     """Initializes the BaseLanguageModel with an optional constraint.
 
     Args:
@@ -44,16 +44,16 @@ class BaseLanguageModel(abc.ABC):
       **kwargs: Additional keyword arguments passed to the model.
     """
     self._constraint = constraint or types.Constraint()
-    self._schema: schema.BaseSchema | None = None
-    self._fence_output_override: bool | None = None
-    self._extra_kwargs: dict[str, Any] = kwargs.copy()
+    self._schema: Optional[schema.BaseSchema] = None
+    self._fence_output_override: Optional[bool] = None
+    self._extra_kwargs: Dict[str, Any] = kwargs.copy()
 
   @classmethod
-  def get_schema_class(cls) -> type[Any] | None:
+  def get_schema_class(cls) -> Optional[type[Any]]:
     """Return the schema class this provider supports."""
     return None
 
-  def apply_schema(self, schema_instance: schema.BaseSchema | None) -> None:
+  def apply_schema(self, schema_instance: Optional[schema.BaseSchema]) -> None:
     """Apply a schema instance to this provider.
 
     Optional method that providers can override to store the schema instance
@@ -65,7 +65,7 @@ class BaseLanguageModel(abc.ABC):
     self._schema = schema_instance
 
   @property
-  def schema(self) -> schema.BaseSchema | None:
+  def schema(self) -> Optional[schema.BaseSchema]:
     """The current schema instance if one is configured.
 
     Returns:
@@ -73,7 +73,7 @@ class BaseLanguageModel(abc.ABC):
     """
     return self._schema
 
-  def set_fence_output(self, fence_output: bool | None) -> None:
+  def set_fence_output(self, fence_output: Optional[bool]) -> None:
     """Set explicit fence output preference.
 
     Args:
@@ -102,8 +102,8 @@ class BaseLanguageModel(abc.ABC):
     return not schema_obj.requires_raw_output
 
   def merge_kwargs(
-      self, runtime_kwargs: Mapping[str, Any] | None = None
-  ) -> dict[str, Any]:
+      self, runtime_kwargs: Mapping[str, Optional[Any]] = None
+  ) -> Dict[str, Any]:
     """Merge stored extra kwargs with runtime kwargs.
 
     Runtime kwargs take precedence over stored kwargs.
@@ -136,7 +136,7 @@ class BaseLanguageModel(abc.ABC):
 
   def infer_batch(
       self, prompts: Sequence[str], batch_size: int = 32  # pylint: disable=unused-argument
-  ) -> list[list[types.ScoredOutput]]:
+  ) -> List[List[types.ScoredOutput]]:
     """Batch inference with configurable batch size.
 
     This is a convenience method that collects all results from infer().

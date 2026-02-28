@@ -1,3 +1,4 @@
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,14 +47,14 @@ class TextChunk:
   """
 
   token_interval: tokenizer_lib.TokenInterval
-  document: data.Document | None = None
-  _chunk_text: str | None = dataclasses.field(
+  document: Optional[data.Document] = None
+  _chunk_text: Optional[str] = dataclasses.field(
       default=None, init=False, repr=False
   )
-  _sanitized_chunk_text: str | None = dataclasses.field(
+  _sanitized_chunk_text: Optional[str] = dataclasses.field(
       default=None, init=False, repr=False
   )
-  _char_interval: data.CharInterval | None = dataclasses.field(
+  _char_interval: Optional[data.CharInterval] = dataclasses.field(
       default=None, init=False, repr=False
   )
 
@@ -83,14 +84,14 @@ class TextChunk:
     )
 
   @property
-  def document_id(self) -> str | None:
+  def document_id(self) -> Optional[str]:
     """Gets the document ID from the source document."""
     if self.document is not None:
       return self.document.document_id
     return None
 
   @property
-  def document_text(self) -> tokenizer_lib.TokenizedText | None:
+  def document_text(self) -> Optional[tokenizer_lib.TokenizedText]:
     """Gets the tokenized text from the source document."""
     if self.document is not None:
       return self.document.tokenized_text
@@ -115,7 +116,7 @@ class TextChunk:
     return self._sanitized_chunk_text
 
   @property
-  def additional_context(self) -> str | None:
+  def additional_context(self) -> Optional[str]:
     """Gets the additional context for prompting from the source document."""
     if self.document is not None:
       return self.document.additional_context
@@ -384,10 +385,10 @@ class ChunkIterator:
 
   def __init__(
       self,
-      text: str | tokenizer_lib.TokenizedText | None,
+      text: Union[str, Optional[tokenizer_lib.TokenizedText]],
       max_char_buffer: int,
       tokenizer_impl: tokenizer_lib.Tokenizer,
-      document: data.Document | None = None,
+      document: Optional[data.Document] = None,
   ):
     """Constructor.
 

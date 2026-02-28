@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +14,8 @@
 # limitations under the License.
 
 """Progress and visualization utilities for LangExtract."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any
 import urllib.parse
 
 import tqdm
@@ -79,7 +79,7 @@ def create_download_progress_bar(
 
 
 def create_extraction_progress_bar(
-    iterable: Any, model_info: str | None = None, disable: bool = False
+    iterable: Any, model_info: Optional[str] = None, disable: bool = False
 ) -> tqdm.tqdm:
   """Create a styled progress bar for extraction.
 
@@ -127,9 +127,9 @@ def print_extraction_complete() -> None:
 def print_extraction_summary(
     num_extractions: int,
     unique_classes: int,
-    elapsed_time: float | None = None,
-    chars_processed: int | None = None,
-    num_chunks: int | None = None,
+    elapsed_time: Optional[float] = None,
+    chars_processed: Optional[int] = None,
+    num_chunks: Optional[int] = None,
 ) -> None:
   """Print a styled extraction summary with optional performance metrics.
 
@@ -187,7 +187,7 @@ def create_save_progress_bar(
 
 
 def create_load_progress_bar(
-    file_path: str, total_size: int | None = None, disable: bool = False
+    file_path: str, total_size: Optional[int] = None, disable: bool = False
 ) -> tqdm.tqdm:
   """Create a progress bar for loading documents.
 
@@ -250,7 +250,7 @@ def print_load_complete(num_docs: int, file_path: str) -> None:
   )
 
 
-def get_model_info(language_model: Any) -> str | None:
+def get_model_info(language_model: Any) -> Optional[str]:
   """Extract model information from a language model instance.
 
   Args:
@@ -299,9 +299,9 @@ def create_extraction_postfix(current_chars: int, processed_chars: int) -> str:
 
 
 def format_extraction_progress(
-    model_info: str | None,
-    current_chars: int | None = None,
-    processed_chars: int | None = None,
+    model_info: Optional[str],
+    current_chars: Optional[int] = None,
+    processed_chars: Optional[int] = None,
 ) -> str:
   """Format the complete extraction progress bar description.
 

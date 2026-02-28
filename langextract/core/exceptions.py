@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +20,6 @@ This module defines all base exceptions for LangExtract. These are the
 foundational error types that are used throughout the codebase.
 """
 
-from __future__ import annotations
 
 __all__ = [
     "LangExtractError",
@@ -67,8 +68,8 @@ class InferenceRuntimeError(InferenceError):
       self,
       message: str,
       *,
-      original: BaseException | None = None,
-      provider: str | None = None,
+      original: Optional[BaseException] = None,
+      provider: Optional[str] = None,
   ) -> None:
     """Initialize the runtime error.
 

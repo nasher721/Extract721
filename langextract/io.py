@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 # limitations under the License.
 
 """Supports Input and Output Operations for Data Annotations."""
-from __future__ import annotations
 
 import abc
 import dataclasses
@@ -84,7 +84,7 @@ class Dataset(abc.ABC):
 
 def save_annotated_documents(
     annotated_documents: Iterator[data.AnnotatedDocument],
-    output_dir: pathlib.Path | str | None = None,
+    output_dir: Union[pathlib.Path, Optional[str]] = None,
     output_name: str = 'data.jsonl',
     show_progress: bool = True,
 ) -> None:
@@ -189,8 +189,8 @@ def load_annotated_documents_jsonl(
 
 
 def _read_csv(
-    filepath: pathlib.Path, column_names: list[str], delimiter: str = ','
-) -> Iterator[dict[str, Any]]:
+    filepath: pathlib.Path, column_names: List[str], delimiter: str = ','
+) -> Iterator[Dict[str, Any]]:
   """Reads a CSV file and yields rows as dicts.
 
   Args:

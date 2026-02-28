@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +23,6 @@ It handles:
 - Order preservation across batch processing
 """
 
-from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 import concurrent.futures
@@ -54,7 +54,7 @@ _CACHE_PREFIX = "cache"
 _UNSET = object()
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@dataclasses.dataclass(frozen=True)
 class BatchConfig:
   """Define and validate Gemini Batch API configuration.
 
@@ -75,9 +75,9 @@ class BatchConfig:
   timeout: int = 3600
   max_prompts_per_job: int = 20000
   ignore_item_errors: bool = False
-  enable_caching: bool | None = _UNSET  # type: ignore
-  retention_days: int | None = _UNSET  # type: ignore
-  on_job_create: Callable[[Any], None] | None = None
+  enable_caching: Optional[bool] = _UNSET  # type: ignore
+  retention_days: Optional[int] = _UNSET  # type: ignore
+  on_job_create: Callable[[Any], Optional[None]] = None
 
   def __post_init__(self):
     """Validate numeric knobs early."""
@@ -110,7 +110,7 @@ class BatchConfig:
         )
 
   @classmethod
-  def from_dict(cls, d: dict | None) -> BatchConfig:
+  def from_dict(cls, d: Optional[dict]) -> BatchConfig:
     """Create BatchConfig from dictionary, using defaults for missing keys."""
     if d is None:
       return cls()
@@ -182,9 +182,9 @@ def _is_vertexai_client(client) -> bool:
 
 def _get_project_location(
     client: genai.Client,
-    project: str | None = None,
-    location: str | None = None,
-) -> tuple[str | None, str]:
+    project: Optional[str] = None,
+    location: Optional[str] = None,
+) -> Optional[Tuple[str], str]:
   """Extract project and location from client or arguments."""
   if project:
     proj = project
@@ -200,14 +200,14 @@ def _get_project_location(
   return proj, loc
 
 
-def _get_bucket_name(project: str | None, location: str) -> str:
+def _get_bucket_name(project: Optional[str], location: str) -> str:
   """Generate consistent GCS bucket name for batch operations."""
   base = f"langextract-{project}-{location}-batch".lower()
   return re.sub(r"[^a-z0-9._-]", "-", base)
 
 
 def _ensure_bucket_lifecycle(
-    bucket: storage.Bucket, retention_days: int | None
+    bucket: storage.Bucket, retention_days: Optional[int]
 ) -> None:
   """Ensure bucket has a lifecycle rule to delete objects after retention_days.
 
@@ -247,10 +247,10 @@ def _ensure_bucket_lifecycle(
 
 def _build_request(
     prompt: str,
-    schema_dict: dict | None,
-    gen_config: dict | None,
-    system_instruction: str | None = None,
-    safety_settings: Sequence[Any] | None = None,
+    schema_dict: Optional[dict],
+    gen_config: Optional[dict],
+    system_instruction: Optional[str] = None,
+    safety_settings: Optional[Sequence[Any]] = None,
 ) -> dict:
   """Build a batch request in REST format for file-based submission.
 
@@ -299,9 +299,9 @@ def _submit_file(
     model_id: str,
     requests: Sequence[dict],
     display: str,
-    retention_days: int | None,
-    project: str | None = None,
-    location: str | None = None,
+    retention_days: Optional[int],
+    project: Optional[str] = None,
+    location: Optional[str] = None,
 ) -> genai.types.BatchJob:
   """Submit a file-based batch job to Vertex AI using GCS storage.
 
@@ -378,7 +378,7 @@ def _submit_file(
 class GCSBatchCache:
   """GCS-based cache for batch inference results."""
 
-  def __init__(self, bucket_name: str, project: str | None = None):
+  def __init__(self, bucket_name: str, project: Optional[str] = None):
     self.bucket_name = bucket_name
     self.project = project
     self._client = storage.Client(project=project)
@@ -389,7 +389,7 @@ class GCSBatchCache:
     canonical_json = json.dumps(key_data, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
-  def _get_single(self, key_hash: str) -> str | None:
+  def _get_single(self, key_hash: str) -> Optional[str]:
     """Fetch single item from GCS."""
     blob = self._bucket.blob(f"{_CACHE_PREFIX}/{key_hash}{_EXT_JSON}")
     try:
@@ -401,7 +401,7 @@ class GCSBatchCache:
       logging.warning("Cache read error for %s: %s", key_hash, e)
     return None
 
-  def get_multi(self, key_data_list: Sequence[dict]) -> dict[int, str]:
+  def get_multi(self, key_data_list: Sequence[dict]) -> Dict[int, str]:
     """Fetch multiple items from GCS in parallel.
 
     Returns:
@@ -423,7 +423,7 @@ class GCSBatchCache:
           results[idx] = text
     return results
 
-  def set_multi(self, items: Sequence[tuple[dict, str]]) -> None:
+  def set_multi(self, items: Sequence[Tuple[dict, str]]) -> None:
     """Upload multiple items to GCS in parallel.
 
     Args:
@@ -462,7 +462,7 @@ class GCSBatchCache:
 
         executor.submit(_upload, text, key_data)
 
-  def iter_items(self) -> Iterator[tuple[str, str]]:
+  def iter_items(self) -> Iterator[Tuple[str, str]]:
     """Iterate over all items in the cache.
 
     Yields:
@@ -513,7 +513,7 @@ def _safe_get_nested(data: dict, *keys) -> Any:
   return current
 
 
-def _extract_text(resp: _TextResponse | dict[str, Any] | None) -> str | None:
+def _extract_text(resp: Union[_TextResponse, Dict[str], Optional[Any]]) -> Optional[str]:
   """Extract text from Vertex AI batch API response.
 
   Args:
@@ -585,7 +585,7 @@ def _poll_completion(
 
 
 def _parse_batch_line(
-    line: str, outputs: dict[int, str], cfg: BatchConfig
+    line: str, outputs: Dict[int, str], cfg: BatchConfig
 ) -> None:
   """Parse a single line from batch output JSONL."""
   try:
@@ -616,7 +616,7 @@ def _extract_from_file(
     job: genai.types.BatchJob,
     cfg: BatchConfig,
     expected_count: int,
-) -> list[str]:
+) -> List[str]:
   """Extract text outputs from file-based batch results, preserving order.
 
   Reads results from GCS output directory.
@@ -637,7 +637,7 @@ def _extract_from_file(
   if not _is_vertexai_client(client):
     raise ValueError("Batch API is only supported with Vertex AI.")
 
-  outputs_by_idx: dict[int, str] = {}
+  outputs_by_idx: Dict[int, str] = {}
 
   if not job.dest:
     raise exceptions.InferenceRuntimeError("Vertex AI batch job missing dest")
@@ -689,14 +689,14 @@ def infer_batch(
     client: genai.Client,
     model_id: str,
     prompts: Sequence[str],
-    schema_dict: dict | None,
+    schema_dict: Optional[dict],
     gen_config: dict,
     cfg: BatchConfig,
-    system_instruction: str | None = None,
-    safety_settings: Sequence[Any] | None = None,
-    project: str | None = None,
-    location: str | None = None,
-) -> list[str]:
+    system_instruction: Optional[str] = None,
+    safety_settings: Optional[Sequence[Any]] = None,
+    project: Optional[str] = None,
+    location: Optional[str] = None,
+) -> List[str]:
   """Execute batch inference on multiple prompts using the Vertex AI Batch API.
 
   This function provides file-based batch processing via Vertex AI. It:
@@ -764,8 +764,8 @@ def infer_batch(
         bucket_name,
     )
 
-  prompts_to_process: list[tuple[int, str]] = []
-  cached_results: dict[int, str] = {}
+  prompts_to_process: List[Tuple[int, str]] = []
+  cached_results: Dict[int, str] = {}
 
   if cache:
 
@@ -799,8 +799,8 @@ def infer_batch(
   )
 
   def _process_batch(
-      batch_items: Sequence[tuple[int, str]], display: str
-  ) -> dict[int, str]:
+      batch_items: Sequence[Tuple[int, str]], display: str
+  ) -> Dict[int, str]:
     """Submit batch job, poll completion, and extract results.
 
     Returns:
@@ -840,7 +840,7 @@ def infer_batch(
 
     return mapped_results
 
-  new_results: dict[int, str] = {}
+  new_results: Dict[int, str] = {}
 
   if (
       cfg.max_prompts_per_job

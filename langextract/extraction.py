@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,6 @@
 
 """Main extraction API for LangExtract."""
 
-from __future__ import annotations
 
 from collections.abc import Iterable
 import typing
@@ -35,25 +35,25 @@ from langextract.core import tokenizer as tokenizer_lib
 
 def extract(
     text_or_documents: typing.Any,
-    prompt_description: str | None = None,
-    examples: typing.Sequence[typing.Any] | None = None,
+    prompt_description: Optional[str] = None,
+    examples: Optional[typing.Sequence[typing.Any]] = None,
     model_id: str = "gemini-2.5-flash",
-    api_key: str | None = None,
-    language_model_type: typing.Type[typing.Any] | None = None,
+    api_key: Optional[str] = None,
+    language_model_type: Optional[typing.Type[typing.Any]] = None,
     format_type: typing.Any = None,
     max_char_buffer: int = 1000,
-    temperature: float | None = None,
-    fence_output: bool | None = None,
+    temperature: Optional[float] = None,
+    fence_output: Optional[bool] = None,
     use_schema_constraints: bool = True,
     batch_length: int = 10,
     max_workers: int = 10,
-    additional_context: str | None = None,
-    resolver_params: dict | None = None,
-    language_model_params: dict | None = None,
+    additional_context: Optional[str] = None,
+    resolver_params: Optional[dict] = None,
+    language_model_params: Optional[dict] = None,
     debug: bool = False,
-    model_url: str | None = None,
+    model_url: Optional[str] = None,
     extraction_passes: int = 1,
-    context_window_chars: int | None = None,
+    context_window_chars: Optional[int] = None,
     config: typing.Any = None,
     model: typing.Any = None,
     *,
@@ -61,8 +61,8 @@ def extract(
     prompt_validation_level: pv.PromptValidationLevel = pv.PromptValidationLevel.WARNING,
     prompt_validation_strict: bool = False,
     show_progress: bool = True,
-    tokenizer: tokenizer_lib.Tokenizer | None = None,
-) -> list[data.AnnotatedDocument] | data.AnnotatedDocument:
+    tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
+) -> Union[List[data.AnnotatedDocument], data.AnnotatedDocument]:
   """Extracts structured information from text.
 
   Retrieves structured information from the provided text or documents using a
@@ -119,7 +119,7 @@ def extract(
         raw language model output string (e.g., extracting JSON from ```json ...
         ``` blocks) into structured `data.Extraction` objects. This dictionary
         overrides default settings. Keys include: - 'extraction_index_suffix'
-        (str | None): Suffix for keys indicating extraction order. Default is
+        (Optional[str]): Suffix for keys indicating extraction order. Default is
         None (order by appearance). Additional alignment parameters can be
         included: 'enable_fuzzy_alignment' (bool): Whether to use fuzzy matching
         if exact matching fails. Disabling this can improve performance but may
@@ -220,7 +220,7 @@ def extract(
   )
   prompt_template.examples.extend(examples)
 
-  language_model: base_model.BaseLanguageModel | None = None
+  language_model: Optional[base_model.BaseLanguageModel] = None
 
   if model:
     language_model = model
@@ -257,7 +257,7 @@ def extract(
           stacklevel=2,
       )
 
-    base_lm_kwargs: dict[str, typing.Any] = {
+    base_lm_kwargs: Dict[str, typing.Any] = {
         "api_key": api_key,
         "format_type": format_type,
         "temperature": temperature,

@@ -238,10 +238,15 @@
 
         <!-- Prompt Description -->
         <section class="config-section">
-          <h3 class="section-label">
-            <span class="section-icon">📝</span> Prompt Description
-          </h3>
-          <div class="prompt-templates-row">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="section-label" style="margin:0;">
+              <span class="section-icon">📝</span> Prompt Description
+            </h3>
+            <button id="openPromptLibraryBtn" class="btn-secondary btn-sm" style="padding:4px 8px;">
+              📚 Library
+            </button>
+          </div>
+          <div class="prompt-templates-row" style="margin-top:8px;">
             <button class="template-chip active" data-template="literary">Literary</button>
             <button class="template-chip" data-template="medical">Medical</button>
             <button class="template-chip" data-template="news">News</button>
@@ -267,7 +272,12 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <div class="input-section">
           <div class="section-row">
             <h3 class="section-label"><span class="section-icon">📄</span> Text to Analyze</h3>
-            <div class="char-counter"><span id="charCount">0</span> chars</div>
+            <div class="char-counter">
+              <span id="charCount">0</span> chars
+              <span class="est-cost" style="color:var(--text-dim); margin-left:8px;">
+                (~<span id="tokenCount">0</span> tokens | <span id="estCost">$0.000</span>)
+              </span>
+            </div>
           </div>
           <textarea id="inputText" class="form-textarea code-font" rows="7"
             placeholder="Paste or type the text you want to analyze…">Lady Juliet gazed longingly at the stars, her heart aching for Romeo, whose absence filled her with a deep and melancholic yearning.</textarea>
@@ -415,6 +425,9 @@ Provide meaningful attributes for each entity to add context.</textarea>
           <div class="note-stats-grid">
             <div class="note-stat"><span id="clinWordCount">0</span><small>words</small></div>
             <div class="note-stat"><span id="clinLineCount">0</span><small>lines</small></div>
+            <div class="note-stat"><span id="clinCharCount">0</span><small>chars</small></div>
+            <div class="note-stat" style="color:var(--text-secondary);"><span id="clinTokenCount">0</span><small>tokens
+                (<span id="clinCostEst">$0.0000</span>)</small></div>
           </div>
         </section>
 
@@ -573,7 +586,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
             </div>
             <button class="pab-change" id="structChangeProviderBtn" title="Change provider">⚙︎</button>
           </div>
-          <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Provider &amp; key set in Standard mode config.</p>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Provider &amp; key set in Standard mode
+            config.</p>
         </section>
 
         <!-- Divider -->
@@ -597,25 +611,83 @@ The AI will strip administrative clutter and return a structured clinical JSON w
     </aside>
 
     <!-- CENTER PANEL: Input -->
-    <section class="panel panel-input">
-      <div class="panel-header">
-        <div class="panel-header-icon input-icon">✍️</div>
-        <h2 class="panel-title">Document Input</h2>
+    <section class="panel panel-input" style="display: flex; flex-direction: column;">
+      <div class="panel-header" style="justify-content: space-between; padding-right: 12px;">
+        <div style="display:flex; align-items:center;">
+          <div class="panel-header-icon input-icon">✍️</div>
+          <h2 class="panel-title">Document Input</h2>
+        </div>
+        <div class="mode-toggle" style="margin:0; padding:2px;">
+          <button class="mode-btn active" id="structInputModeSingleBtn"
+            style="padding: 4px 12px; font-size: 0.85rem;">Single</button>
+          <button class="mode-btn" id="structInputModeBatchBtn" style="padding: 4px 12px; font-size: 0.85rem;">Batch
+            ⚡️</button>
+        </div>
       </div>
-      <div class="panel-body">
-        <div class="input-section">
-          <textarea id="structInputText" class="form-textarea code-font" rows="18"
-            placeholder="Paste document text here to extract data matching your schema..."></textarea>
+      <div class="panel-body" style="flex:1; display:flex; flex-direction:column;">
+
+        <!-- Single Input View -->
+        <div id="structSingleInputView" style="display:flex; flex-direction:column; flex:1;">
+          <div class="input-section" style="flex:1;">
+            <textarea id="structInputText" class="form-textarea code-font" style="height: 100%; min-height: 300px;"
+              placeholder="Paste document text here to extract data matching your schema..."></textarea>
+          </div>
+          <div class="struct-input-stats">
+            <span id="structWordCount">0</span> words · <span id="structCharCount">0</span> chars
+            <span class="est-cost" style="color:var(--text-dim); margin-left:8px;">
+              · ~<span id="structTokenCount">0</span> tokens (<span id="structCostEst">$0.0000</span>)
+            </span>
+          </div>
         </div>
 
-        <!-- Word / char counter for structured input -->
-        <div class="struct-input-stats">
-          <span id="structWordCount">0</span> words · <span id="structCharCount">0</span> chars
+        <!-- Batch Input View -->
+        <div id="structBatchInputView" style="display: none; flex-direction:column; flex:1;">
+          <div class="file-drop-zone" id="structBatchDropZone" style="margin-bottom: 12px;">
+            <div class="file-drop-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3>Drag & Drop files here</h3>
+            <p>Supports .txt, .pdf, .docx, .md</p>
+            <input type="file" id="structBatchFileInput" multiple accept=".txt,.pdf,.docx,.md" style="display:none;">
+            <button class="btn-secondary btn-sm" onclick="document.getElementById('structBatchFileInput').click()"
+              style="margin-top: 8px;">Browse Files</button>
+          </div>
+
+          <div class="batch-list-container"
+            style="flex:1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); display: none; background: var(--surface-light);"
+            id="structBatchListContainer">
+            <table class="schema-table" style="margin: 0; width: 100%;">
+              <thead style="position: sticky; top: 0; background: var(--bg-primary); z-index: 1;">
+                <tr>
+                  <th
+                    style="padding: 8px 12px; text-align: left; font-size: 0.8rem; border-bottom: 2px solid var(--border-color);">
+                    File Name</th>
+                  <th
+                    style="padding: 8px 12px; text-align: right; width: 60px; font-size: 0.8rem; border-bottom: 2px solid var(--border-color);">
+                    Size</th>
+                  <th style="padding: 8px 12px; width: 30px; border-bottom: 2px solid var(--border-color);"></th>
+                </tr>
+              </thead>
+              <tbody id="structBatchFileList">
+                <!-- files injected here -->
+              </tbody>
+            </table>
+          </div>
+          <div class="struct-input-stats" id="structBatchStats"
+            style="display: none; justify-content: space-between; margin-top: 8px;">
+            <span><span id="structBatchCount">0</span> files queued</span>
+            <button class="btn-secondary btn-sm" id="structBatchClearBtn"
+              style="padding: 2px 8px; font-size: 0.75rem;">Clear All</button>
+          </div>
         </div>
 
         <div class="extract-footer" style="margin-top:20px;">
           <button class="btn-extract" id="structExtractBtn">
-            <span class="extract-btn-content">
+            <span class="extract-btn-content" id="structExtractBtnContent">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
@@ -677,6 +749,37 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       </div>
       <div id="historyList" class="history-list">
         <p class="history-empty">No extractions saved yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Prompt Library Modal ────────────────────────────────────── -->
+  <div id="promptModal" class="modal-overlay">
+    <div class="modal-panel" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>📚 Prompt Library</h2>
+        <div class="modal-header-actions">
+          <button class="btn-icon" id="closePromptBtn" title="Close">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <input type="text" id="newPromptName" class="form-input" style="flex: 1;"
+            placeholder="Save current prompt as...">
+          <button id="savePromptBtn" class="btn-primary" style="padding: 8px 16px;">Save</button>
+        </div>
+
+        <div id="promptList" class="history-list" style="max-height: 400px; padding: 0; background: transparent;">
+          <p class="history-empty">No saved prompts.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer"
+        style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px;">
+        <button id="exportPromptsBtn" class="btn-secondary btn-sm">Export JSON</button>
+        <button id="importPromptsBtn" class="btn-secondary btn-sm">Import JSON</button>
+        <input type="file" id="importPromptsFile" style="display: none;" accept=".json">
       </div>
     </div>
   </div>

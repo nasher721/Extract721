@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,6 @@
 # limitations under the License.
 
 """Library for building prompts."""
-from __future__ import annotations
 
 import dataclasses
 import json
@@ -46,7 +47,7 @@ class PromptTemplateStructured:
   """
 
   description: str
-  examples: list[data.ExampleData] = dataclasses.field(default_factory=list)
+  examples: List[data.ExampleData] = dataclasses.field(default_factory=list)
 
 
 def read_prompt_template_structured_from_file(
@@ -112,7 +113,7 @@ class QAPromptGenerator:
         f"{self.answer_prefix}{answer}\n",
     ])
 
-  def render(self, question: str, additional_context: str | None = None) -> str:
+  def render(self, question: str, additional_context: Optional[str] = None) -> str:
     """Generate a text representation of the prompt.
 
     Args:
@@ -123,7 +124,7 @@ class QAPromptGenerator:
     Returns:
       Text prompt with a question to be presented to a language model.
     """
-    prompt_lines: list[str] = [f"{self.template.description}\n"]
+    prompt_lines: List[str] = [f"{self.template.description}\n"]
 
     if additional_context:
       prompt_lines.append(f"{additional_context}\n")
@@ -157,7 +158,7 @@ class PromptBuilder:
       self,
       chunk_text: str,
       document_id: str,
-      additional_context: str | None = None,
+      additional_context: Optional[str] = None,
   ) -> str:
     """Builds a prompt for the given chunk.
 
@@ -193,7 +194,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
   def __init__(
       self,
       generator: QAPromptGenerator,
-      context_window_chars: int | None = None,
+      context_window_chars: Optional[int] = None,
   ):
     """Initializes the builder with context tracking configuration.
 
@@ -204,10 +205,10 @@ class ContextAwarePromptBuilder(PromptBuilder):
     """
     super().__init__(generator)
     self._context_window_chars = context_window_chars
-    self._prev_chunk_by_doc_id: dict[str, str] = {}
+    self._prev_chunk_by_doc_id: Dict[str, str] = {}
 
   @property
-  def context_window_chars(self) -> int | None:
+  def context_window_chars(self) -> Optional[int]:
     """Number of trailing characters from previous chunk to include."""
     return self._context_window_chars
 
@@ -216,7 +217,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
       self,
       chunk_text: str,
       document_id: str,
-      additional_context: str | None = None,
+      additional_context: Optional[str] = None,
   ) -> str:
     """Builds a prompt, injecting previous chunk context if enabled.
 
@@ -242,8 +243,8 @@ class ContextAwarePromptBuilder(PromptBuilder):
   def _build_effective_context(
       self,
       document_id: str,
-      additional_context: str | None,
-  ) -> str | None:
+      additional_context: Optional[str],
+  ) -> Optional[str]:
     """Combines previous chunk context with any additional context.
 
     Args:
@@ -253,7 +254,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     Returns:
       Combined context string, or None if no context is available.
     """
-    context_parts: list[str] = []
+    context_parts: List[str] = []
 
     if self._context_window_chars and document_id in self._prev_chunk_by_doc_id:
       prev_text = self._prev_chunk_by_doc_id[document_id]

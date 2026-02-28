@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 # limitations under the License.
 
 """Core data types for LangExtract."""
-from __future__ import annotations
 
 import dataclasses
 import enum
@@ -55,8 +55,8 @@ class Constraint:
 class ScoredOutput:
   """Scored output from language model inference."""
 
-  score: float | None = None
-  output: str | None = None
+  score: Optional[float] = None
+  output: Optional[str] = None
 
   def __str__(self) -> str:
     score_str = '-' if self.score is None else f'{self.score:.2f}'

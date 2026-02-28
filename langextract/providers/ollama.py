@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +82,6 @@ Prerequisites:
 """
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 import dataclasses
 from typing import Any, Iterator, Mapping, Sequence
@@ -141,16 +141,16 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
   _constraint: schema.Constraint = dataclasses.field(
       default_factory=schema.Constraint, repr=False, compare=False
   )
-  _extra_kwargs: dict[str, Any] = dataclasses.field(
+  _extra_kwargs: Dict[str, Any] = dataclasses.field(
       default_factory=dict, repr=False, compare=False
   )
   # Authentication
-  _api_key: str | None = None
+  _api_key: Optional[str] = None
   _auth_scheme: str = 'Bearer'
   _auth_header: str = 'Authorization'
 
   @classmethod
-  def get_schema_class(cls) -> type[schema.BaseSchema] | None:
+  def get_schema_class(cls) -> Optional[type[schema.BaseSchema]]:
     """Return the FormatModeSchema class for JSON output support.
 
     Returns:
@@ -173,11 +173,11 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
       self,
       model_id: str,
       model_url: str = _OLLAMA_DEFAULT_MODEL_URL,
-      base_url: str | None = None,  # Alias for model_url
-      format_type: core_types.FormatType | None = None,
-      structured_output_format: str | None = None,  # Deprecated
+      base_url: Optional[str] = None,  # Alias for model_url
+      format_type: Optional[core_types.FormatType] = None,
+      structured_output_format: Optional[str] = None,  # Deprecated
       constraint: schema.Constraint = schema.Constraint(),
-      timeout: int | None = None,
+      timeout: Optional[int] = None,
       **kwargs,
   ) -> None:
     """Initialize the Ollama language model.
@@ -278,21 +278,21 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
   def _ollama_query(
       self,
       prompt: str,
-      model: str | None = None,
-      temperature: float | None = None,
-      seed: int | None = None,
-      top_k: int | None = None,
-      top_p: float | None = None,
-      max_output_tokens: int | None = None,
-      structured_output_format: str | None = None,
+      model: Optional[str] = None,
+      temperature: Optional[float] = None,
+      seed: Optional[int] = None,
+      top_k: Optional[int] = None,
+      top_p: Optional[float] = None,
+      max_output_tokens: Optional[int] = None,
+      structured_output_format: Optional[str] = None,
       system: str = '',
       raw: bool = False,
-      model_url: str | None = None,
-      timeout: int | None = None,
-      keep_alive: int | None = None,
-      num_threads: int | None = None,
-      num_ctx: int | None = None,
-      stop: str | list[str] | None = None,
+      model_url: Optional[str] = None,
+      timeout: Optional[int] = None,
+      keep_alive: Optional[int] = None,
+      num_threads: Optional[int] = None,
+      num_ctx: Optional[int] = None,
+      stop: Union[str, Optional[List[str]]] = None,
       **kwargs,
   ) -> Mapping[str, Any]:
     """Sends a prompt to an Ollama model and returns the generated response.
@@ -347,7 +347,7 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
           'json' if self.format_type == core_types.FormatType.JSON else 'yaml'
       )
 
-    options: dict[str, Any] = {}
+    options: Dict[str, Any] = {}
     if keep_alive is not None:
       options['keep_alive'] = keep_alive
     else:
@@ -394,7 +394,7 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
         'api/generate',
     )
 
-    payload: dict[str, Any] = {
+    payload: Dict[str, Any] = {
         'model': model,
         'prompt': prompt,
         'system': system,

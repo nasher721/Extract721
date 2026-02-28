@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 # limitations under the License.
 
 """Provider-specific schema implementations."""
-from __future__ import annotations
 
 from langextract.providers.schemas import gemini
 

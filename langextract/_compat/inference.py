@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,6 @@
 
 """Compatibility shim for langextract.inference imports."""
 
-from __future__ import annotations
 
 import enum
 import warnings

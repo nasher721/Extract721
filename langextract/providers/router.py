@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +21,6 @@ providers to be registered without importing their dependencies until needed.
 """
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 import dataclasses
 import functools
@@ -37,17 +38,17 @@ TLanguageModel = typing.TypeVar(
 )
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True)
 class _Entry:
   """Registry entry for a provider."""
 
-  patterns: tuple[re.Pattern[str], ...]
+  patterns: Tuple[re.Pattern[str], ...]
   loader: typing.Callable[[], type[base_model.BaseLanguageModel]]
   priority: int
 
 
-_entries: list[_Entry] = []
-_entry_keys: set[tuple[str, tuple[str, ...], int]] = (
+_entries: List[_Entry] = []
+_entry_keys: set[Tuple[str, Tuple[str, ...], int]] = (
     set()
 )  # (provider_id, patterns, priority)
 
@@ -55,7 +56,7 @@ _entry_keys: set[tuple[str, tuple[str, ...], int]] = (
 def _add_entry(
     *,
     provider_id: str,
-    patterns: tuple[re.Pattern[str], ...],
+    patterns: Tuple[re.Pattern[str], ...],
     loader: typing.Callable[[], type[base_model.BaseLanguageModel]],
     priority: int,
 ) -> None:
@@ -81,7 +82,7 @@ def _add_entry(
 
 
 def register_lazy(
-    *patterns: str | re.Pattern[str], target: str, priority: int = 0
+    *patterns: Union[str, re.Pattern[str]], target: str, priority: int = 0
 ) -> None:
   """Register a provider lazily using string import path.
 
@@ -106,7 +107,7 @@ def register_lazy(
 
 
 def register(
-    *patterns: str | re.Pattern[str], priority: int = 0
+    *patterns: Union[str, re.Pattern[str]], priority: int = 0
 ) -> typing.Callable[[type[TLanguageModel]], type[TLanguageModel]]:
   """Decorator to register a provider class directly.
 
@@ -223,7 +224,7 @@ def clear() -> None:
   resolve_provider.cache_clear()
 
 
-def list_providers() -> list[tuple[tuple[str, ...], int]]:
+def list_providers() -> List[Tuple[Tuple[str, ...], int]]:
   """List all registered providers with their patterns and priorities.
 
   Returns:
@@ -235,7 +236,7 @@ def list_providers() -> list[tuple[tuple[str, ...], int]]:
   ]
 
 
-def list_entries() -> list[tuple[list[str], int]]:
+def list_entries() -> List[Tuple[List[str], int]]:
   """List all registered patterns and priorities. Mainly for debugging.
 
   Returns:

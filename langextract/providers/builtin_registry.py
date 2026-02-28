@@ -18,7 +18,7 @@ This module defines the registration details for all built-in providers,
 using patterns from the centralized patterns module.
 """
 
-from typing import TypedDict
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, TypedDict
 
 from langextract.providers import patterns
 
@@ -26,13 +26,13 @@ from langextract.providers import patterns
 class ProviderConfig(TypedDict):
   """Configuration for a provider registration."""
 
-  patterns: tuple[str, ...]
+  patterns: Tuple[str, ...]
   target: str
   priority: int
 
 
 # Built-in provider configurations using centralized patterns
-BUILTIN_PROVIDERS: list[ProviderConfig] = [
+BUILTIN_PROVIDERS: List[ProviderConfig] = [
     {
         'patterns': patterns.GEMINI_PATTERNS,
         'target': 'langextract.providers.gemini:GeminiLanguageModel',

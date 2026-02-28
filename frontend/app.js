@@ -26,12 +26,22 @@ const state = {
     examples: [],
     currentTemplate: 'literary',
     clinStructuredData: null,
+    // Prompt Library
+    prompts: JSON.parse(localStorage.getItem('langextract_prompts')) || [
+        { id: 'p_lit', name: 'Literary', prompt: TEMPLATES.literary, readonly: true },
+        { id: 'p_med', name: 'Medical', prompt: TEMPLATES.medical, readonly: true },
+        { id: 'p_new', name: 'News', prompt: TEMPLATES.news, readonly: true },
+        { id: 'p_fin', name: 'Financial', prompt: 'Extract financial entities: companies, tickers, currencies, revenues, profits. Include fiscal quarters as attributes.', readonly: true }
+    ],
     // Schema Builder
     schemaFields: [
         { id: Date.now(), name: 'Patient Name', type: 'string', description: 'Full name of the patient' },
         { id: Date.now() + 1, name: 'Diagnoses', type: 'array', description: 'List of confirmed medical diagnoses' }
     ],
-    structModel: 'gemini-2.5-flash'
+    structModel: 'gemini-2.5-flash',
+    // Batch Upload Tracker
+    structuredBatchMode: false,
+    structuredBatchFiles: []
 };
 
 // ─── DOM Shortcuts ────────────────────────────────────────────────────────────
@@ -254,34 +264,69 @@ function initConfig() {
     if (clinChangeBtn) clinChangeBtn.addEventListener('click', switchToStandard);
 
     const structChangeBtn = $('structChangeProviderBtn');
-    if (structChangeBtn) structChangeBtn.addEventListener('click', switchToStandard);
-
-    // Text stats helpers
-    function updateTextStats(text, wordId, charId, lineId) {
-        const charEl = $(charId);
-        const wordEl = $(wordId);
-        const lineEl = $(lineId);
-
-        if (charEl) charEl.textContent = text.length.toLocaleString();
-
-        if (wordEl || lineEl) {
-            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-            const lines = text.length > 0 ? text.split('\n').length : 0;
-            if (wordEl) wordEl.textContent = words.toLocaleString();
-            if (lineEl) lineEl.textContent = lines.toLocaleString();
-        }
-    }
-
-    const clinInput = $('clinicalNoteText');
-    if (clinInput) {
-        clinInput.addEventListener('input', () => updateTextStats(clinInput.value, 'clinWordCount', 'clinCharCount', 'clinLineCount'));
-    }
 
     const structInput = $('structInputText');
     if (structInput) {
-        structInput.addEventListener('input', () => updateTextStats(structInput.value, 'structWordCount', 'structCharCount', null));
+        structInput.addEventListener('input', () => updateTextStats(structInput.value, 'structWordCount', 'structCharCount', null, 'structTokenCount', 'structCostEst', 'structured'));
     }
 }
+
+// ─── Text Stats Helpers ───────────────────────────────────────────────────────
+
+const MODEL_PRICING_PER_1M_TOKENS = {
+    'gemini-2.5-flash': 0.075,
+    'gemini-2.5-pro': 3.50,
+    'gemini-1.5-flash': 0.075,
+    'gemini-1.5-pro': 3.50,
+    'gpt-4o': 5.00,
+    'gpt-4o-mini': 0.15,
+    'gpt-4-turbo': 10.00,
+    'gpt-3.5-turbo': 0.50,
+    'claude-3-5-sonnet-20241022': 3.00,
+    'claude-3-opus-20240229': 15.00,
+    'claude-3-haiku-20240307': 0.25,
+    'glm-4': 14.00,
+    'glm-4-flash': 0.15,
+    'glm-4-air': 1.00,
+    'glm-4-plus': 7.00
+};
+
+function estimateCost(charCount, modelId) {
+    const estimatedTokens = Math.ceil(charCount / 4);
+    const pricePer1M = MODEL_PRICING_PER_1M_TOKENS[modelId] || 0.15;
+    const cost = (estimatedTokens / 1000000) * pricePer1M;
+    return { tokens: estimatedTokens.toLocaleString(), cost: cost > 0 ? cost.toFixed(4) : "0.0000" };
+}
+
+function updateTextStats(text, wordId, charId, lineId, tokenId, costId, modeHint = 'gemini-2.5-flash') {
+    const charCount = text.length;
+    const charEl = $(charId);
+    const wordEl = $(wordId);
+    const lineEl = $(lineId);
+
+    if (charEl) charEl.textContent = charCount.toLocaleString();
+
+    if (wordEl || lineEl) {
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const lines = text.length > 0 ? text.split('\n').length : 0;
+        if (wordEl) wordEl.textContent = words.toLocaleString();
+        if (lineEl) lineEl.textContent = lines.toLocaleString();
+    }
+
+    const tokenEl = $(tokenId);
+    const costEl = $(costId);
+    if (tokenEl || costEl) {
+        let activeModel = modeHint;
+        if (modeHint === 'standard') activeModel = state.selectedModel || 'gemini-2.5-flash';
+        else if (modeHint === 'clinical') activeModel = state.clinicalModel || 'gemini-2.5-flash';
+        else if (modeHint === 'structured') activeModel = state.structModel || 'gemini-2.5-flash';
+
+        const { tokens, cost } = estimateCost(charCount, activeModel);
+        if (tokenEl) tokenEl.textContent = tokens;
+        if (costEl) costEl.textContent = `$${cost}`;
+    }
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // STANDARD MODE
@@ -329,23 +374,22 @@ function initStandardMode() {
             btn.classList.add('active');
             state.selectedModel = btn.dataset.model;
             $('modelHint').textContent = state.selectedModel;
-            $('customModelId').style.display = state.selectedModel === 'custom' ? 'block' : 'none';
         });
     });
 
     // API key toggle
-    $('toggleApiKey').addEventListener('click', () => toggleSecret('apiKey', 'eyeOpen', 'eyeClosed'));
+    registerEvent('toggleApiKey', 'click', () => toggleSecret('apiKey', 'eyeOpen', 'eyeClosed'));
 
     // Char counter
-    $('inputText').addEventListener('input', e => {
-        $('charCount').textContent = e.target.value.length.toLocaleString();
+    registerEvent('inputText', 'input', e => {
+        updateTextStats(e.target.value, null, 'charCount', null, 'tokenCount', 'estCost', 'standard');
     });
 
     // Add example
-    $('addExampleBtn').addEventListener('click', addExample);
+    registerEvent('addExampleBtn', 'click', addExample);
 
     // Extract
-    $('extractBtn').addEventListener('click', runExtraction);
+    registerEvent('extractBtn', 'click', runExtraction);
 
     // Keyboard shortcut
     document.addEventListener('keydown', e => {
@@ -360,13 +404,15 @@ function initStandardMode() {
     });
 
     // Copy JSON
-    $('copyJsonBtn').addEventListener('click', () => {
-        const content = $('jsonOutput').textContent;
-        navigator.clipboard.writeText(content).then(() => showToast('JSON copied!', 'success'));
+    registerEvent('copyJsonBtn', 'click', () => {
+        const content = $('jsonOutput')?.textContent;
+        if (content) {
+            navigator.clipboard.writeText(content).then(() => showToast('JSON copied!', 'success'));
+        }
     });
 
     // Config collapse
-    $('collapseConfig').addEventListener('click', toggleConfigCollapse);
+    registerEvent('collapseConfig', 'click', toggleConfigCollapse);
 }
 
 // Examples ─────────────────────────────────────────────────────────────────────
@@ -491,25 +537,23 @@ async function runExtraction() {
     const apiKey = getActiveKey();
     if (!apiKey) { showToast(`Please enter your ${state.provider.toUpperCase()} API key`, 'error'); return; }
 
-    const text = $('inputText').value.trim();
+    const text = $('inputText')?.value?.trim();
     if (!text) { showToast('Please enter some text to analyze', 'error'); return; }
 
-    const modelId = state.selectedModel === 'custom'
-        ? ($('customModelId').value.trim() || 'gemini-2.5-flash')
-        : state.selectedModel;
+    const modelId = state.selectedModel;
 
     setExtractionLoading(true);
     setStatus('loading', 'Extracting…');
 
     const payload = {
         text,
-        prompt: $('promptDescription').value.trim(),
-        examples: state.examples.map(ex => ({
-            text: ex.text,
-            extractions: ex.extractions.map(ext => ({
-                extraction_class: ext.extraction_class,
-                extraction_text: ext.extraction_text,
-                attributes: ext.attributes,
+        prompt: $('promptDescription')?.value?.trim() ?? '',
+        examples: state.examples.map(({ text, extractions }) => ({
+            text,
+            extractions: extractions.map(({ extraction_class, extraction_text, attributes }) => ({
+                extraction_class,
+                extraction_text,
+                attributes
             })),
         })),
         model_id: state.selectedModel,
@@ -518,14 +562,7 @@ async function runExtraction() {
     };
 
     try {
-        const res = await fetch('/api/extract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Extraction failed');
-
+        const data = await apiClient('/api/extract', payload);
         displayResults(data);
         setStatus('ready', 'Done');
         showToast('Extraction complete!', 'success');
@@ -597,7 +634,7 @@ function toggleConfigCollapse() {
 
 function initClinicalMode() {
     // API key toggle
-    $('toggleClinicalApiKey').addEventListener('click', () => {
+    registerEvent('toggleClinicalApiKey', 'click', () => {
         toggleSecret('clinicalApiKey', 'clinEyeOpen', 'clinEyeClosed');
     });
 
@@ -612,12 +649,12 @@ function initClinicalMode() {
     });
 
     // Char counter
-    $('clinicalNoteText').addEventListener('input', e => {
-        $('clinCharCount').textContent = e.target.value.length.toLocaleString();
+    registerEvent('clinicalNoteText', 'input', e => {
+        updateTextStats(e.target.value, 'clinWordCount', 'clinCharCount', 'clinLineCount', 'clinTokenCount', 'clinCostEst', 'clinical');
     });
 
     // Extract button
-    $('clinicalExtractBtn').addEventListener('click', runClinicalExtraction);
+    registerEvent('clinicalExtractBtn', 'click', runClinicalExtraction);
 
     // Keyboard shortcut
     document.addEventListener('keydown', e => {
@@ -632,53 +669,60 @@ function initClinicalMode() {
     });
 
     // Copy JSON
-    $('clinCopyJsonBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText($('clinJsonOutput').textContent)
-            .then(() => showToast('JSON copied!', 'success'));
+    registerEvent('clinCopyJsonBtn', 'click', () => {
+        const textContent = $('clinJsonOutput')?.textContent;
+        if (textContent) {
+            navigator.clipboard.writeText(textContent)
+                .then(() => showToast('JSON copied!', 'success'));
+        }
     });
 
     // Copy Histories
-    const clinCopyHistoriesBtn = $('clinCopyHistoriesBtn');
-    if (clinCopyHistoriesBtn) {
-        clinCopyHistoriesBtn.addEventListener('click', () => {
-            if (!state.clinStructuredData || state.clinStructuredData._parse_error) {
-                showToast('No structured data available to copy', 'error');
-                return;
-            }
-            const hKeys = ['history', 'past_medical_history', 'past_surgical_history', 'family_history', 'social_history'];
-            let parts = [];
-            hKeys.forEach(k => {
-                const val = state.clinStructuredData[k];
-                if (val !== null && val !== undefined) {
-                    const label = CLIN_SECTIONS.find(s => s.key === k)?.label || k;
-                    let text = '';
-                    if (typeof val === 'string') {
-                        text = val;
-                    } else if (Array.isArray(val)) {
-                        text = val.map(v => typeof v === 'string' ? `- ${v}` : `- ${JSON.stringify(v)}`).join('\n');
-                    } else {
-                        text = JSON.stringify(val, null, 2);
-                    }
-                    parts.push(`${label}:\n${text}`);
+    registerEvent('clinCopyHistoriesBtn', 'click', () => {
+        if (!state.clinStructuredData || state.clinStructuredData._parse_error) {
+            showToast('No structured data available to copy', 'error');
+            return;
+        }
+        const hKeys = ['history', 'past_medical_history', 'past_surgical_history', 'family_history', 'social_history'];
+        let parts = [];
+        hKeys.forEach(k => {
+            const val = state.clinStructuredData[k];
+            if (val !== null && val !== undefined) {
+                const label = CLIN_SECTIONS.find(s => s.key === k)?.label || k;
+                let text = '';
+                if (typeof val === 'string') {
+                    text = val;
+                } else if (Array.isArray(val)) {
+                    text = val.map(v => typeof v === 'string' ? `- ${v}` : `- ${JSON.stringify(v)}`).join('\n');
+                } else {
+                    text = JSON.stringify(val, null, 2);
                 }
-            });
-            if (parts.length === 0) {
-                showToast('No histories found to copy', 'error');
-                return;
+                parts.push(`${label}:\n${text}`);
             }
-            navigator.clipboard.writeText(parts.join('\n\n'))
-                .then(() => showToast('Histories copied to clipboard!', 'success'))
-                .catch(() => showToast('Failed to copy', 'error'));
         });
-    }
+        if (parts.length === 0) {
+            showToast('No histories found to copy', 'error');
+            return;
+        }
+        navigator.clipboard.writeText(parts.join('\n\n'))
+            .then(() => showToast('Histories copied to clipboard!', 'success'))
+            .catch(() => showToast('Failed to copy', 'error'));
+    });
 }
+
+let currentStreamController = null;
 
 async function runClinicalExtraction() {
     const apiKey = getActiveKey();
     if (!apiKey) { showToast(`Please enter your ${state.provider.toUpperCase()} API key`, 'error'); return; }
 
-    const noteText = $('clinicalNoteText').value.trim();
+    const noteText = $('clinicalNoteText')?.value?.trim();
     if (!noteText) { showToast('Please paste an EMR note first', 'error'); return; }
+
+    if (currentStreamController) {
+        currentStreamController.abort();
+    }
+    currentStreamController = new AbortController();
 
     setClinicalLoading(true);
     setStatus('loading', 'Processing note…');
@@ -693,73 +737,87 @@ async function runClinicalExtraction() {
                 api_key: apiKey,
                 provider: state.provider,
             }),
+            signal: currentStreamController.signal
         });
 
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || 'Clinical extraction failed');
+            throw new Error(errData?.detail || `HTTP Error ${res.status}`);
         }
 
-        $('clinEmptyState').style.display = 'none';
-        $('clinErrorState').style.display = 'none';
-        $('clinResultsTabs').style.display = 'flex';
+        const emptyEl = $('clinEmptyState');
+        const errEl = $('clinErrorState');
+        const tabsEl = $('clinResultsTabs');
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (errEl) errEl.style.display = 'none';
+        if (tabsEl) tabsEl.style.display = 'flex';
         switchClinTab('cards');
 
         const cardsEl = $('clinTabCardsContent');
-        // Show streaming state
-        cardsEl.innerHTML = `
-            <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:14px;">
-               <div class="spinner" style="display:inline-block; margin-right:10px; width:16px; height:16px;"></div> 
-               Streaming response from AI...
-            </div>
-            <pre id="clinStreamRaw" class="json-output" style="padding:16px; min-height:100px; white-space:pre-wrap; word-break:break-word;"></pre>
-        `;
-        $('clinJsonOutput').textContent = "Streaming...";
+        if (cardsEl) {
+            cardsEl.innerHTML = `
+                <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:14px;">
+                   <div class="spinner" style="display:inline-block; margin-right:10px; width:16px; height:16px;"></div> 
+                   Streaming response from AI...
+                </div>
+                <pre id="clinStreamRaw" class="json-output" style="padding:16px; min-height:100px; white-space:pre-wrap; word-break:break-word;"></pre>
+            `;
+        }
+
+        const jsonOut = $('clinJsonOutput');
+        if (jsonOut) jsonOut.textContent = "Streaming...";
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let rawOutput = "";
         let streamEl = $('clinStreamRaw');
 
-        let done = false;
-        while (!done) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            if (value) {
-                const chunkStr = decoder.decode(value, { stream: true });
-                const lines = chunkStr.split('\n');
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const dataObj = JSON.parse(line.substring(6));
-                            if (dataObj.chunk) {
-                                rawOutput += dataObj.chunk;
-                                if (streamEl) {
-                                    streamEl.textContent = rawOutput;
-                                    // auto-scroll
-                                    cardsEl.scrollTop = cardsEl.scrollHeight;
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                if (value) {
+                    const chunkStr = decoder.decode(value, { stream: true });
+                    const lines = chunkStr.split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const dataObj = JSON.parse(line.substring(6));
+                                if (dataObj.chunk) {
+                                    rawOutput += dataObj.chunk;
+                                    if (streamEl) {
+                                        streamEl.textContent = rawOutput;
+                                        if (cardsEl) cardsEl.scrollTop = cardsEl.scrollHeight;
+                                    }
+                                } else if (dataObj.error) {
+                                    throw new Error(dataObj.error);
                                 }
-                            } else if (dataObj.error) {
-                                throw new Error(dataObj.error);
+                            } catch (e) {
+                                if (e !== SyntaxError && e.message !== "Unexpected end of JSON input") {
+                                    // Let streaming JSON errors pass quietly but log others
+                                    console.warn("[Stream Parse Debug]", e);
+                                }
                             }
-                        } catch (e) {
-                            // ignore json parse errors on incomplete chunks
                         }
                     }
                 }
             }
+        } finally {
+            reader.releaseLock();
         }
 
         // Clean and parse final output
         let clean = rawOutput.trim();
-        clean = clean.replace(/^```(?:json)?\s*/m, '');
-        clean = clean.replace(/\s*```$/m, '');
+        clean = clean.replace(/^```(?:json)?\s*/im, '');
+        clean = clean.replace(/\s*```$/im, '');
         clean = clean.trim();
 
         let structured;
         try {
             structured = JSON.parse(clean);
         } catch (e) {
+            console.error("[Structured Extraction Error] Failed to parse final JSON:", e);
             structured = { raw_text: clean, _parse_error: "Model did not return valid JSON" };
         }
 
@@ -767,12 +825,29 @@ async function runClinicalExtraction() {
         displayClinicalResults(structured, rawOutput);
         setStatus('ready', 'Done');
         showToast('Streaming complete!', 'success');
+
+        if (typeof saveToHistory === 'function') {
+            saveToHistory({
+                mode: 'clinical',
+                provider: state.provider,
+                model: state.clinicalModel,
+                inputSnippet: noteText.substring(0, 100),
+                promptText: "Clinical Default Extract",
+                rawResult: JSON.stringify(structured, null, 2),
+                timestamp: new Date().toISOString()
+            });
+        }
     } catch (err) {
-        showClinicalError(err.message);
-        setStatus('error', 'Error');
-        showToast(err.message, 'error');
+        if (err.name === 'AbortError') {
+            console.log('Stream aborted');
+        } else {
+            showClinicalError(err.message);
+            setStatus('error', 'Error');
+            showToast(err.message, 'error');
+        }
     } finally {
         setClinicalLoading(false);
+        currentStreamController = null;
     }
 }
 
@@ -923,12 +998,52 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+/**
+ * Generic event register to prevent null reference errors on missing DOM nodes
+ */
+function registerEvent(id, eventType, callback) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener(eventType, callback);
+    } else {
+        console.warn(`[Systematic Debugging] Element #${id} not found for event ${eventType}`);
+    }
+}
+
+/**
+ * Robust API Client with built-in systematic error tracking and generic error parsing
+ */
+async function apiClient(endpoint, payload) {
+    console.log(`[API Request] -> ${endpoint}`, { provider: payload.provider, model: payload.model_id });
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            const errorMsg = data?.detail || `HTTP Error ${response.status}`;
+            console.error(`[API Error] <- ${endpoint}:`, errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        console.log(`[API Success] <- ${endpoint}`, data);
+        return data;
+    } catch (err) {
+        console.error(`[API Network/Timeout Error] -> ${endpoint}:`, err);
+        throw err;
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // STRUCTURED SCHEMA MODE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function initStructuredMode() {
-    registerClick('structAddFieldBtn', () => {
+    registerEvent('structAddFieldBtn', 'click', () => {
         state.schemaFields.push({
             id: Date.now(),
             name: '',
@@ -938,18 +1053,20 @@ function initStructuredMode() {
         renderSchemaFields();
     });
 
-    registerClick('structExtractBtn', runStructuredExtraction);
+    registerEvent('structExtractBtn', 'click', runStructuredExtraction);
 
     // Initial render
     renderSchemaFields();
 
     // Model selection sync
+    registerEvent('structModelSelect', 'change', (e) => {
+        state.structModel = e.target.value;
+    });
+
+    // Sync initial value if element exists
     const mSelect = $('structModelSelect');
     if (mSelect) {
         mSelect.value = state.structModel;
-        mSelect.addEventListener('change', (e) => {
-            state.structModel = e.target.value;
-        });
     }
 }
 
@@ -1016,6 +1133,116 @@ function renderSchemaFields() {
             renderSchemaFields();
         });
     });
+    initStructuredBatchUpload();
+}
+
+function initStructuredBatchUpload() {
+    registerEvent('structInputModeSingleBtn', 'click', () => {
+        state.structuredBatchMode = false;
+        $('structInputModeSingleBtn')?.classList.add('active');
+        $('structInputModeBatchBtn')?.classList.remove('active');
+        const sv = $('structSingleInputView'); if (sv) sv.style.display = 'flex';
+        const bv = $('structBatchInputView'); if (bv) bv.style.display = 'none';
+        const btn = $('structExtractBtnContent');
+        if (btn) btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3" /></svg> Extract Structured JSON';
+    });
+
+    registerEvent('structInputModeBatchBtn', 'click', () => {
+        state.structuredBatchMode = true;
+        $('structInputModeBatchBtn')?.classList.add('active');
+        $('structInputModeSingleBtn')?.classList.remove('active');
+        const bv = $('structBatchInputView'); if (bv) bv.style.display = 'flex';
+        const sv = $('structSingleInputView'); if (sv) sv.style.display = 'none';
+        const btn = $('structExtractBtnContent');
+        if (btn) btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3" /></svg> Extract Batch JSON';
+    });
+
+    const dropZone = $('structBatchDropZone');
+    const fileInput = $('structBatchFileInput');
+    if (!dropZone || !fileInput) return;
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => e.preventDefault(), false);
+    });
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+    });
+
+    dropZone.addEventListener('drop', (e) => handleStructBatchFiles(e.dataTransfer.files), false);
+    fileInput.addEventListener('change', function () { handleStructBatchFiles(this.files); });
+
+    registerEvent('structBatchClearBtn', 'click', () => {
+        state.structuredBatchFiles = [];
+        renderStructBatchFiles();
+    });
+}
+
+async function handleStructBatchFiles(files) {
+    if (!files || files.length === 0) return;
+    showToast('Parsing ' + files.length + ' file(s)...', 'info');
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('/api/parse-file', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error('File parse failed');
+            const data = await response.json();
+
+            state.structuredBatchFiles.push({
+                id: 'bf_' + Date.now() + '_' + i,
+                name: file.name,
+                size: file.size,
+                text: data.text
+            });
+        } catch (err) {
+            console.error('Error parsing file:', file.name, err);
+            showToast('Failed to parse ' + file.name, 'error');
+        }
+    }
+    renderStructBatchFiles();
+    showToast('Files loaded successfully.', 'success');
+}
+
+function renderStructBatchFiles() {
+    const list = $('structBatchFileList');
+    const container = $('structBatchListContainer');
+    const stats = $('structBatchStats');
+    const countSpan = $('structBatchCount');
+    if (!list) return;
+
+    if (state.structuredBatchFiles.length === 0) {
+        list.innerHTML = '';
+        container.style.display = 'none';
+        stats.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    stats.style.display = 'flex';
+    countSpan.textContent = state.structuredBatchFiles.length;
+
+    list.innerHTML = state.structuredBatchFiles.map(f => `
+        <tr>
+            <td style="padding: 8px 12px; font-size: 0.85rem; border-bottom: 1px solid var(--border-color);">${escapeHtml(f.name)}</td>
+            <td style="padding: 8px 12px; text-align: right; font-size: 0.8rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">${(f.size / 1024).toFixed(1)} KB</td>
+            <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border-color);">
+                <button class="btn-icon struct-batch-del" data-id="${f.id}" title="Remove file" style="padding:2px;">✕</button>
+            </td>
+        </tr>
+    `).join('');
+
+    list.querySelectorAll('.struct-batch-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            state.structuredBatchFiles = state.structuredBatchFiles.filter(f => f.id !== id);
+            renderStructBatchFiles();
+        });
+    });
 }
 
 function updateField(id, updates) {
@@ -1025,74 +1252,159 @@ function updateField(id, updates) {
     }
 }
 
-async function runStructuredExtraction() {
-    const text = $('structInputText')?.value.trim() || '';
-    if (!text) {
-        showToast('Please provide input text', 'error');
-        return;
-    }
-
-    if (state.schemaFields.length === 0) {
-        showToast('Please add at least one field', 'error');
+async function runStructuredBatchExtraction() {
+    if (state.structuredBatchFiles.length === 0) {
+        showToast('Please add at least one file to process', 'error');
         return;
     }
 
     const btn = $('structExtractBtn');
     const spinner = $('structExtractSpinner');
-    const btnContent = btn.querySelector('.extract-btn-content');
+    const btnContent = btn?.querySelector('.extract-btn-content');
+    const output = $('structJsonOutput');
+
+    setStatus('loading', 'Processing batch extraction...');
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.style.display = 'inline-flex';
+    if (btnContent) btnContent.style.display = 'none';
+    if (output) output.style.display = 'none';
+
+    try {
+        const apiKey = getActiveKey();
+        if (!apiKey) throw new Error('Please enter your ' + state.provider.toUpperCase() + ' API key in the config panel.');
+
+        const payload = {
+            items: state.structuredBatchFiles.map(f => ({ id: f.id, text: f.text })),
+            prompt: 'Extract data',
+            extraction_schema: state.schemaFields,
+            model_id: state.structModel,
+            api_key: apiKey,
+            provider: state.provider
+        };
+
+        const result = await apiClient('/api/extract-batch', payload);
+
+        const combinedResults = [];
+        result.results.forEach(res => {
+            const originalFile = state.structuredBatchFiles.find(f => f.id === res.id);
+            if (res.success && res.data) {
+                const items = Array.isArray(res.data) ? res.data : [res.data];
+                items.forEach(item => {
+                    combinedResults.push({
+                        _source_file: originalFile ? originalFile.name : 'Unknown',
+                        ...item
+                    });
+                });
+            } else {
+                combinedResults.push({
+                    _source_file: originalFile ? originalFile.name : 'Unknown',
+                    _error: res.error || 'Parsing failed'
+                });
+            }
+        });
+
+        _lastStructuredResult = combinedResults;
+
+        if (output) {
+            output.textContent = JSON.stringify(combinedResults, null, 2);
+            output.style.display = 'block';
+        }
+
+        setStatus('success', 'Batch extraction complete');
+        showToast('Processed ' + result.results.length + ' files', 'success');
+
+        if (typeof saveToHistory === 'function') {
+            saveToHistory({
+                mode: 'structured',
+                provider: state.provider,
+                model: state.structModel,
+                inputSnippet: `Batch: ${state.structuredBatchFiles.length} files`,
+                promptText: `Schema Fields: ${state.schemaFields.length}`,
+                rawResult: JSON.stringify(combinedResults, null, 2),
+                timestamp: new Date().toISOString()
+            });
+        }
+
+    } catch (error) {
+        setStatus('error', error.message);
+        showToast(error.message, 'error');
+    } finally {
+        setStatus('success', 'Ready');
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+        if (btnContent) btnContent.style.display = 'inline-flex';
+    }
+}
+
+async function runStructuredExtraction() {
+    if (state.schemaFields.length === 0) {
+        showToast('Please add at least one schema field', 'error');
+        return;
+    }
+
+    if (state.structuredBatchMode) {
+        return runStructuredBatchExtraction();
+    }
+
+    const text = $('structInputText')?.value?.trim() ?? '';
+    if (!text) {
+        showToast('Please provide input text', 'error');
+        return;
+    }
+
+    const btn = $('structExtractBtn');
+    const spinner = $('structExtractSpinner');
+    const btnContent = btn?.querySelector('.extract-btn-content');
     const output = $('structJsonOutput');
 
     setStatus('loading', 'Extracting structured data...');
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     if (spinner) spinner.style.display = 'inline-flex';
     if (btnContent) btnContent.style.display = 'none';
-    output.style.display = 'none';
+    if (output) output.style.display = 'none';
 
     try {
         const apiKey = getActiveKey();
         if (!apiKey) throw new Error(`Please enter your ${state.provider.toUpperCase()} API key in the config panel.`);
 
-        const response = await fetch('/api/extract-structured', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: text,
-                extraction_schema: state.schemaFields,
-                model_id: state.structModel,
-                api_key: apiKey,
-                provider: state.provider,
-            })
-        });
+        const payload = {
+            text: text,
+            extraction_schema: state.schemaFields,
+            model_id: state.structModel,
+            api_key: apiKey,
+            provider: state.provider,
+        };
 
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || 'Extraction failed');
+        const result = await apiClient('/api/extract-structured', payload);
+
+        _lastStructuredResult = result.data;
+
+        if (output) {
+            output.textContent = JSON.stringify(result.data, null, 2);
+            output.style.display = 'block';
         }
 
-        const result = await response.json();
-
-        output.textContent = JSON.stringify(result.data, null, 2);
-        output.style.display = 'block';
         setStatus('success', 'Structured extraction complete');
         showToast('Structured extraction complete', 'success');
 
-        saveToHistory({
-            mode: 'structured',
-            provider: state.provider,
-            model: state.structModel,
-            inputSnippet: text.substring(0, 100),
-            promptText: `Schema Fields: ${state.schemaFields.length}`,
-            rawResult: JSON.stringify(result.data, null, 2),
-            timestamp: new Date().toISOString()
-        });
+        if (typeof saveToHistory === 'function') {
+            saveToHistory({
+                mode: 'structured',
+                provider: state.provider,
+                model: state.structModel,
+                inputSnippet: text.substring(0, 100),
+                promptText: `Schema Fields: ${state.schemaFields.length}`,
+                rawResult: JSON.stringify(result.data, null, 2),
+                timestamp: new Date().toISOString()
+            });
+        }
 
     } catch (error) {
-        console.error('Structured Extraction Error:', error);
         setStatus('error', error.message);
         showToast(error.message, 'error');
     } finally {
         setStatus('success', 'Ready');
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
         if (spinner) spinner.style.display = 'none';
         if (btnContent) btnContent.style.display = 'inline-flex';
     }
@@ -1428,6 +1740,152 @@ function injectSchemaTemplatePicker() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  PROMPT LIBRARY MODULE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function promptsSave(items) {
+    localStorage.setItem('langextract_prompts', JSON.stringify(items));
+    state.prompts = items;
+}
+
+function promptsRender() {
+    const list = document.getElementById('promptList');
+    if (!list) return;
+    if (!state.prompts.length) {
+        list.innerHTML = '<p class="history-empty">No saved prompts.</p>';
+        return;
+    }
+    list.innerHTML = state.prompts.map(item => `
+        <div class="history-item" data-id="${item.id}">
+            <div class="history-item-content">
+                <div class="history-item-title">${escapeHtml(item.name)}</div>
+                <div class="history-item-meta" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:300px;">
+                    ${escapeHtml(item.prompt.substring(0, 60))}...
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                ${item.readonly ? '<span class="history-item-badge">Built-in</span>' : ''}
+                <button class="btn-secondary btn-sm prompt-item-load" data-id="${item.id}">Load</button>
+                ${!item.readonly ? `<button class="history-item-delete prompt-item-del" data-id="${item.id}" title="Delete">✕</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+
+    // Load
+    list.querySelectorAll('.prompt-item-load').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = state.prompts.find(p => p.id === btn.dataset.id);
+            if (item) {
+                const ta = document.getElementById('promptDescription');
+                if (ta) {
+                    ta.value = item.prompt;
+                    showToast('Loaded prompt: ' + item.name, 'success');
+                    promptModalClose();
+
+                    // Clear the active template chip since we loaded from library
+                    document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('active'));
+                    state.currentTemplate = 'custom';
+                }
+            }
+        });
+    });
+
+    // Delete
+    list.querySelectorAll('.prompt-item-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!confirm('Delete this prompt?')) return;
+            const newPrompts = state.prompts.filter(p => p.id !== btn.dataset.id);
+            promptsSave(newPrompts);
+            promptsRender();
+        });
+    });
+}
+
+function promptModalOpen() {
+    promptsRender();
+    const modal = document.getElementById('promptModal');
+    if (modal) modal.classList.add('open');
+}
+function promptModalClose() {
+    const modal = document.getElementById('promptModal');
+    if (modal) modal.classList.remove('open');
+}
+
+function initPromptLibrary() {
+    registerEvent('openPromptLibraryBtn', 'click', promptModalOpen);
+    registerEvent('closePromptBtn', 'click', promptModalClose);
+
+    // Close modal if clicked outside
+    const modal = document.getElementById('promptModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) promptModalClose();
+        });
+    }
+
+    registerEvent('savePromptBtn', 'click', () => {
+        const nameInput = document.getElementById('newPromptName');
+        const name = nameInput.value.trim();
+        const promptText = document.getElementById('promptDescription')?.value.trim();
+
+        if (!name) { showToast('Please enter a name to save.', 'error'); return; }
+        if (!promptText) { showToast('Prompt description is empty.', 'error'); return; }
+
+        const newPrompt = {
+            id: 'p_' + Date.now(),
+            name: name,
+            prompt: promptText,
+            readonly: false
+        };
+
+        promptsSave([newPrompt, ...state.prompts]);
+        promptsRender();
+        nameInput.value = '';
+        showToast('Prompt saved to library!', 'success');
+    });
+
+    registerEvent('exportPromptsBtn', 'click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.prompts, null, 2));
+        const a = document.createElement('a');
+        a.href = dataStr;
+        a.download = 'langextract_prompts_' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+    });
+
+    const fileInput = document.getElementById('importPromptsFile');
+    if (fileInput) {
+        registerEvent('importPromptsBtn', 'click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (!Array.isArray(imported)) throw new Error('Invalid format');
+                    // Merge, avoiding strict duplicates by ID
+                    const existingIds = new Set(state.prompts.map(p => p.id));
+                    const toAdd = imported.filter(p => !existingIds.has(p.id) && p.name && p.prompt);
+                    if (toAdd.length) {
+                        promptsSave([...toAdd, ...state.prompts]);
+                        promptsRender();
+                        showToast('Imported ' + toAdd.length + ' prompts!', 'success');
+                    } else {
+                        showToast('No new prompts found or invalid file.', 'info');
+                    }
+                } catch {
+                    showToast('Failed to parse JSON file', 'error');
+                }
+                fileInput.value = '';
+            };
+            reader.readAsText(file);
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  PATCH: Intercept extraction functions to save to history & track CSV data
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1440,6 +1898,7 @@ function injectSchemaTemplatePicker() {
         initClinicalFileUpload();
         initCsvExport();
         injectSchemaTemplatePicker();
+        initPromptLibrary();
 
         // Patch structuredExtraction to track last result and show CSV btn
         const origStructBtn = document.getElementById('structExtractBtn');

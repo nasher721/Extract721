@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +19,5 @@ This package contains compatibility shims for deprecated imports. All code
 in this directory will be removed in v2.0.0.
 """
 
-from __future__ import annotations
 
 __all__ = ["inference", "schema", "exceptions", "registry"]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +23,7 @@ Example
 >>> lx.visualize(doc)
 """
 
-from __future__ import annotations
+
 
 import dataclasses
 import enum
@@ -60,7 +62,7 @@ def _is_jupyter() -> bool:
     return False
 
 
-_PALETTE: list[str] = [
+_PALETTE: List[str] = [
     '#D2E3FC',  # Light Blue (Primary Container)
     '#C8E6C9',  # Light Green (Tertiary Container)
     '#FEF0C3',  # Light Yellow (Primary Color)
@@ -176,7 +178,7 @@ _VISUALIZATION_CSS = textwrap.dedent("""\
     </style>""")
 
 
-def _assign_colors(extractions: list[data.Extraction]) -> dict[str, str]:
+def _assign_colors(extractions: List[data.Extraction]) -> Dict[str, str]:
   """Assigns a background colour to each extraction class.
 
   Args:
@@ -186,7 +188,7 @@ def _assign_colors(extractions: list[data.Extraction]) -> dict[str, str]:
     Mapping from extraction_class to a hex colour string.
   """
   classes = {e.extraction_class for e in extractions if e.char_interval}
-  color_map: dict[str, str] = {}
+  color_map: Dict[str, str] = {}
   palette_cycle = itertools.cycle(_PALETTE)
   for cls in sorted(classes):
     color_map[cls] = next(palette_cycle)
@@ -194,8 +196,8 @@ def _assign_colors(extractions: list[data.Extraction]) -> dict[str, str]:
 
 
 def _filter_valid_extractions(
-    extractions: list[data.Extraction],
-) -> list[data.Extraction]:
+    extractions: List[data.Extraction],
+) -> List[data.Extraction]:
   """Filters extractions to only include those with valid char intervals."""
   return [
       e
@@ -234,8 +236,8 @@ class SpanPoint:
 
 def _build_highlighted_text(
     text: str,
-    extractions: list[data.Extraction],
-    color_map: dict[str, str],
+    extractions: List[data.Extraction],
+    color_map: Dict[str, str],
 ) -> str:
   """Returns text with <span> highlights inserted, supporting nesting.
 
@@ -286,7 +288,7 @@ def _build_highlighted_text(
 
   points.sort(key=sort_key)
 
-  html_parts: list[str] = []
+  html_parts: List[str] = []
   cursor = 0
   for point in points:
     if point.position > cursor:
@@ -311,7 +313,7 @@ def _build_highlighted_text(
   return ''.join(html_parts)
 
 
-def _build_legend_html(color_map: dict[str, str]) -> str:
+def _build_legend_html(color_map: Dict[str, str]) -> str:
   """Builds legend HTML showing extraction classes and their colors."""
   if not color_map:
     return ''
@@ -328,7 +330,7 @@ def _build_legend_html(color_map: dict[str, str]) -> str:
   )
 
 
-def _format_attributes(attributes: dict | None) -> str:
+def _format_attributes(attributes: Optional[dict]) -> str:
   """Formats attributes as a single-line string."""
   if not attributes:
     return '{}'
@@ -358,10 +360,10 @@ def _format_attributes(attributes: dict | None) -> str:
 
 def _prepare_extraction_data(
     text: str,
-    extractions: list[data.Extraction],
-    color_map: dict[str, str],
+    extractions: List[data.Extraction],
+    color_map: Dict[str, str],
     context_chars: int = 150,
-) -> list[dict]:
+) -> List[dict]:
   """Prepares JavaScript data for extractions."""
   extraction_data = []
   for i, extraction in enumerate(extractions):
@@ -416,8 +418,8 @@ def _prepare_extraction_data(
 
 def _build_visualization_html(
     text: str,
-    extractions: list[data.Extraction],
-    color_map: dict[str, str],
+    extractions: List[data.Extraction],
+    color_map: Dict[str, str],
     animation_speed: float = 1.0,
     show_legend: bool = True,
 ) -> str:
@@ -478,8 +480,7 @@ def _build_visualization_html(
                  onchange="jumpToExtraction(this.value)">
         </div>
         <div class="lx-status-text">
-          Entity <span id="entityInfo">1/{len(extractions)}</span> |
-          Pos <span id="posInfo">{pos_info_str}</span>
+          Entity <span id="entityInfo">1/{len(extractions)}</span>, Pos <span id="posInfo">{pos_info_str}</span>
         </div>
       </div>
     </div>
@@ -552,12 +553,12 @@ def _build_visualization_html(
 
 
 def visualize(
-    data_source: data.AnnotatedDocument | str | pathlib.Path,
+    data_source: Union[data.AnnotatedDocument, str, pathlib.Path],
     *,
     animation_speed: float = 1.0,
     show_legend: bool = True,
     gif_optimized: bool = True,
-) -> HTML | str:
+) -> Union[HTML, str]:
   """Visualises extraction data as animated highlighted HTML.
 
   Args:

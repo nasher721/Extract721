@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,6 @@ This package provides the main extract and visualize functions,
 with lazy loading for other submodules accessed via attribute access.
 """
 
-from __future__ import annotations
 
 import importlib
 import sys

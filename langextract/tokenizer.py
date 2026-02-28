@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,6 @@ This module provides backward compatibility for code that imports from
 langextract.tokenizer. All functionality has moved to langextract.core.tokenizer.
 """
 
-from __future__ import annotations
 
 # Re-export everything from core.tokenizer for backward compatibility
 # pylint: disable=unused-wildcard-import

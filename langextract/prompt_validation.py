@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +16,6 @@
 
 """Prompt validation for alignment checks on few-shot examples."""
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 import copy
@@ -61,13 +62,13 @@ class ValidationIssue:
   """Represents a single validation issue found during alignment."""
 
   example_index: int
-  example_id: str | None
+  example_id: Optional[str]
   extraction_class: str
   extraction_text_preview: str
-  alignment_status: data.AlignmentStatus | None
+  alignment_status: Optional[data.AlignmentStatus]
   issue_kind: _IssueKind
-  char_interval: tuple[int, int] | None = None
-  token_interval: tuple[int, int] | None = None
+  char_interval: Tuple[int, Optional[int]] = None
+  token_interval: Tuple[int, Optional[int]] = None
 
   def short_msg(self) -> str:
     """Returns a concise message describing the issue."""
@@ -87,7 +88,7 @@ class ValidationIssue:
 class ValidationReport:
   """Collection of validation issues from prompt alignment checks."""
 
-  issues: list[ValidationIssue]
+  issues: List[ValidationIssue]
 
   @property
   def has_failed(self) -> bool:
@@ -121,9 +122,9 @@ def _preview(s: str, n: int = 120) -> str:
 
 def validate_prompt_alignment(
     examples: Sequence[data.ExampleData],
-    aligner: resolver.WordAligner | None = None,
-    policy: AlignmentPolicy | None = None,
-    tokenizer: tokenizer_lib.Tokenizer | None = None,
+    aligner: Optional[resolver.WordAligner] = None,
+    policy: Optional[AlignmentPolicy] = None,
+    tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
 ) -> ValidationReport:
   """Align extractions to their own example text and collect issues.
 
@@ -143,7 +144,7 @@ def validate_prompt_alignment(
   aligner = aligner or resolver.WordAligner()
   policy = policy or AlignmentPolicy()
 
-  issues: list[ValidationIssue] = []
+  issues: List[ValidationIssue] = []
 
   for idx, ex in enumerate(examples):
     # Defensive copy so validation never mutates user examples.

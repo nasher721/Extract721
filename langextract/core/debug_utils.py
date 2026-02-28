@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +14,13 @@
 # limitations under the License.
 
 """Debug utilities for LangExtract."""
-from __future__ import annotations
 
 import functools
 import inspect
 import logging
 import reprlib
 import time
-from typing import Any, Callable, Mapping
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any, Callable, Mapping
 
 from absl import logging as absl_logging
 
@@ -70,7 +70,7 @@ def _redact_value(name: str, value: Any) -> str:
   return _safe_repr(value)
 
 
-def _redact_mapping(mapping: Mapping[str, Any]) -> dict[str, str]:
+def _redact_mapping(mapping: Mapping[str, Any]) -> Dict[str, str]:
   """Replace sensitive values with <REDACTED>."""
   out = {}
   for k, v in mapping.items():
@@ -79,7 +79,7 @@ def _redact_mapping(mapping: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _format_bound_args(
-    fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+    fn: Callable, args: Tuple[Any, ...], kwargs: Dict[str, Any]
 ) -> str:
   """Format function arguments using signature inspection."""
   try:
@@ -94,7 +94,7 @@ def _format_bound_args(
       parts += [f"{k}={v}" for k, v in sorted(red.items())]
     return ", ".join(parts)
 
-  parts: list[str] = []
+  parts: List[str] = []
   for name, value in bound.arguments.items():
     if name in ("self", "cls"):
       parts.append(f"{name}=<{type(value).__name__}>")

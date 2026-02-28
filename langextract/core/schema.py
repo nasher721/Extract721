@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,10 @@
 # limitations under the License.
 
 """Core schema abstractions for LangExtract."""
-from __future__ import annotations
 
 import abc
 from collections.abc import Sequence
-from typing import Any
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any
 
 from langextract.core import data
 from langextract.core import format_handler as fh
@@ -48,7 +48,7 @@ class BaseSchema(abc.ABC):
     """Factory method to build a schema instance from example data."""
 
   @abc.abstractmethod
-  def to_provider_config(self) -> dict[str, Any]:
+  def to_provider_config(self) -> Dict[str, Any]:
     """Convert schema to provider-specific configuration.
 
     Returns:
@@ -75,7 +75,7 @@ class BaseSchema(abc.ABC):
       format_handler: The format configuration to validate.
     """
 
-  def sync_with_provider_kwargs(self, kwargs: dict[str, Any]) -> None:
+  def sync_with_provider_kwargs(self, kwargs: Dict[str, Any]) -> None:
     """Hook to update schema state based on provider kwargs.
 
     This allows schemas to adjust their behavior based on caller overrides.
@@ -114,7 +114,7 @@ class FormatModeSchema(BaseSchema):
     # Default to JSON format
     return cls(format_type=types.FormatType.JSON)
 
-  def to_provider_config(self) -> dict[str, Any]:
+  def to_provider_config(self) -> Dict[str, Any]:
     """Convert schema to provider-specific configuration."""
     return {"format": self._format}
 
@@ -123,7 +123,7 @@ class FormatModeSchema(BaseSchema):
     """JSON format schemas output raw JSON without fences, YAML does not."""
     return self._format == "json"
 
-  def sync_with_provider_kwargs(self, kwargs: dict[str, Any]) -> None:
+  def sync_with_provider_kwargs(self, kwargs: Dict[str, Any]) -> None:
     """Sync format type with provider kwargs."""
     if "format_type" in kwargs:
       self.format_type = kwargs["format_type"]

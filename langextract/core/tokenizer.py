@@ -20,6 +20,7 @@ sentence boundaries for smaller context use cases. This module is not used
 for tokenization within the language model during inference.
 """
 
+from typing import Union, List, Dict, Any, Optional, Sequence, Set
 import abc
 from collections.abc import Sequence, Set
 import dataclasses
@@ -62,7 +63,7 @@ class SentenceRangeError(BaseTokenizerError):
   """Error raised when the start token index for a sentence is out of range."""
 
 
-@dataclasses.dataclass(slots=True)
+@dataclasses.dataclass
 class CharInterval:
   """Represents a range of character positions in the original text.
 
@@ -75,7 +76,7 @@ class CharInterval:
   end_pos: int
 
 
-@dataclasses.dataclass(slots=True)
+@dataclasses.dataclass
 class TokenInterval:
   """Represents an interval over tokens in tokenized text.
 
@@ -105,7 +106,7 @@ class TokenType(enum.IntEnum):
   PUNCTUATION = 2
 
 
-@dataclasses.dataclass(slots=True)
+@dataclasses.dataclass
 class Token:
   """Represents a token extracted from text.
 
@@ -142,7 +143,7 @@ class TokenizedText:
   """
 
   text: str
-  tokens: list[Token] = dataclasses.field(default_factory=list)
+  tokens: List[Token] = dataclasses.field(default_factory=list)
 
 
 _LETTERS_PATTERN = r"[^\W\d_]+"
@@ -270,7 +271,7 @@ _LATIN_SCRIPT = "Latin"
 
 
 # Optimization: Direct mapping for common scripts avoids regex overhead.
-def _get_script_fast(char: str) -> str | Sentinel:
+def _get_script_fast(char: str) -> Union[str, Sentinel]:
   # Fast path for ASCII: Avoids regex and unicodedata lookups.
   if ord(char) < 128:
     return _LATIN_SCRIPT
@@ -310,7 +311,7 @@ _GRAPHEME_CLUSTER_PATTERN = regex.compile(r"\X")
 
 
 @functools.lru_cache(maxsize=4096)
-def _get_common_script_cached(c: str) -> str | Sentinel:
+def _get_common_script_cached(c: str) -> Union[str, Sentinel]:
   """Determines script using regex, cached for performance."""
   match = _COMMON_SCRIPTS_PATTERN.match(c)
   if match:
@@ -342,7 +343,7 @@ class UnicodeTokenizer(Tokenizer):
     Returns:
       A TokenizedText object.
     """
-    tokens: list[Token] = []
+    tokens: List[Token] = []
 
     current_start = 0
     current_type = None
@@ -443,7 +444,7 @@ class UnicodeTokenizer(Tokenizer):
 
   def _emit_token(
       self,
-      tokens: list[Token],
+      tokens: List[Token],
       text: str,
       start: int,
       end: int,

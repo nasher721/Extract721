@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +14,17 @@
 # limitations under the License.
 
 """Library for data conversion between AnnotatedDocument and JSON."""
-from __future__ import annotations
 
 import dataclasses
 import enum
 import numbers
-from typing import Any, Iterable, Mapping
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any, Iterable, Mapping
 
 from langextract.core import data
 from langextract.core import tokenizer
 
 
-def enum_asdict_factory(items: Iterable[tuple[str, Any]]) -> dict[str, Any]:
+def enum_asdict_factory(items: Iterable[Tuple[str, Any]]) -> Dict[str, Any]:
   """Custom dict_factory for dataclasses.asdict.
 
   Recursively converts dataclass instances, converts enum values to their
@@ -38,7 +38,7 @@ def enum_asdict_factory(items: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     A mapping of field names to their values, with special handling for
     dataclasses, enums, and numeric types.
   """
-  result: dict[str, Any] = {}
+  result: Dict[str, Any] = {}
   for key, value in items:
     # Skip internal fields.
     if key.startswith("_"):
@@ -55,8 +55,8 @@ def enum_asdict_factory(items: Iterable[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def annotated_document_to_dict(
-    adoc: data.AnnotatedDocument | None,
-) -> dict[str, Any]:
+    adoc: Optional[data.AnnotatedDocument],
+) -> Dict[str, Any]:
   """Converts an AnnotatedDocument into a Python dict.
 
   This function converts an AnnotatedDocument object into a Python dict, making

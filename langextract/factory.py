@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +21,6 @@ based on configuration, with support for environment variable resolution
 and provider-specific defaults.
 """
 
-from __future__ import annotations
 
 import dataclasses
 import os
@@ -32,7 +33,7 @@ from langextract.core import exceptions
 from langextract.providers import router
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@dataclasses.dataclass(frozen=True)
 class ModelConfig:
   """Configuration for instantiating a language model provider.
 
@@ -43,16 +44,16 @@ class ModelConfig:
     provider_kwargs: Optional provider-specific keyword arguments.
   """
 
-  model_id: str | None = None
-  provider: str | None = None
-  provider_kwargs: dict[str, typing.Any] = dataclasses.field(
+  model_id: Optional[str] = None
+  provider: Optional[str] = None
+  provider_kwargs: Dict[str, typing.Any] = dataclasses.field(
       default_factory=dict
   )
 
 
 def _kwargs_with_environment_defaults(
-    model_id: str, kwargs: dict[str, typing.Any]
-) -> dict[str, typing.Any]:
+    model_id: str, kwargs: Dict[str, typing.Any]
+) -> Dict[str, typing.Any]:
   """Add environment-based defaults to provider kwargs.
 
   Args:
@@ -102,11 +103,11 @@ def _kwargs_with_environment_defaults(
 
 def create_model(
     config: ModelConfig,
-    examples: typing.Sequence[typing.Any] | None = None,
+    examples: Optional[typing.Sequence[typing.Any]] = None,
     use_schema_constraints: bool = False,
-    fence_output: bool | None = None,
+    fence_output: Optional[bool] = None,
     return_fence_output: bool = False,
-) -> base_model.BaseLanguageModel | tuple[base_model.BaseLanguageModel, bool]:
+) -> Union[base_model.BaseLanguageModel, Tuple[base_model.BaseLanguageModel], bool]:
   """Create a language model instance from configuration.
 
   Args:
@@ -177,8 +178,8 @@ def create_model(
 
 
 def create_model_from_id(
-    model_id: str | None = None,
-    provider: str | None = None,
+    model_id: Optional[str] = None,
+    provider: Optional[str] = None,
     **provider_kwargs: typing.Any,
 ) -> base_model.BaseLanguageModel:
   """Convenience function to create a model.
@@ -199,9 +200,9 @@ def create_model_from_id(
 
 def _create_model_with_schema(
     config: ModelConfig,
-    examples: typing.Sequence[typing.Any] | None = None,
+    examples: Optional[typing.Sequence[typing.Any]] = None,
     use_schema_constraints: bool = True,
-    fence_output: bool | None = None,
+    fence_output: Optional[bool] = None,
 ) -> base_model.BaseLanguageModel:
   """Internal helper to create a model with optional schema constraints.
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +15,10 @@
 
 """Centralized format handler for prompts and parsing."""
 
-from __future__ import annotations
 
 import json
 import re
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, Union, List, Optional, Dict, Any
 import warnings
 
 import yaml
@@ -26,7 +26,7 @@ import yaml
 from langextract.core import data
 from langextract.core import exceptions
 
-ExtractionValueType = str | int | float | dict | list | None
+ExtractionValueType = Union[str, int, float, dict, Optional[List]]
 
 _JSON_FORMAT = "json"
 _YAML_FORMAT = "yaml"
@@ -67,7 +67,7 @@ class FormatHandler:
       self,
       format_type: data.FormatType = data.FormatType.JSON,
       use_wrapper: bool = True,
-      wrapper_key: str | None = None,
+      wrapper_key: Optional[str] = None,
       use_fences: bool = True,
       attribute_suffix: str = data.ATTRIBUTE_SUFFIX,
       strict_fences: bool = False,
@@ -114,7 +114,7 @@ class FormatHandler:
     )
 
   def format_extraction_example(
-      self, extractions: list[data.Extraction]
+      self, extractions: List[data.Extraction]
   ) -> str:
     """Format extractions for a prompt example.
 
@@ -149,7 +149,7 @@ class FormatHandler:
     return self._add_fences(formatted) if self.use_fences else formatted
 
   def parse_output(
-      self, text: str, *, strict: bool | None = None
+      self, text: str, *, strict: Optional[bool] = None
   ) -> Sequence[Mapping[str, ExtractionValueType]]:
     """Parse model output to extract data.
 
@@ -250,7 +250,7 @@ class FormatHandler:
     return f"```{fence_type}\n{content.strip()}\n```"
 
   def _is_valid_language_tag(
-      self, lang: str | None, valid_tags: dict[data.FormatType, set[str]]
+      self, lang: Optional[str], valid_tags: Dict[data.FormatType, set[str]]
   ) -> bool:
     """Check if language tag is valid for the format type."""
     if lang is None:
@@ -348,14 +348,14 @@ class FormatHandler:
   def from_resolver_params(
       cls,
       *,
-      resolver_params: dict | None,
+      resolver_params: Optional[dict],
       base_format_type: data.FormatType,
       base_use_fences: bool,
       base_attribute_suffix: str = data.ATTRIBUTE_SUFFIX,
       base_use_wrapper: bool = True,
-      base_wrapper_key: str | None = data.EXTRACTIONS_KEY,
+      base_wrapper_key: Optional[str] = data.EXTRACTIONS_KEY,
       warn_on_legacy: bool = True,
-  ) -> tuple[FormatHandler, dict]:
+  ) -> Tuple[FormatHandler, dict]:
     """Create FormatHandler from resolver_params with legacy support.
 
     This method handles backward compatibility for legacy resolver parameters

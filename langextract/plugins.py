@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +19,6 @@
 This module provides centralized provider discovery without circular imports.
 It supports both built-in providers and third-party providers via entry points.
 """
-from __future__ import annotations
 
 import functools
 import importlib
@@ -30,13 +31,13 @@ from langextract.core import base_model
 __all__ = ["available_providers", "get_provider_class"]
 
 # Static mapping for built-in providers (always available)
-_BUILTINS: dict[str, str] = {
+_BUILTINS: Dict[str, str] = {
     "gemini": "langextract.providers.gemini:GeminiLanguageModel",
     "ollama": "langextract.providers.ollama:OllamaLanguageModel",
 }
 
 # Optional built-in providers (require extra dependencies)
-_OPTIONAL_BUILTINS: dict[str, str] = {
+_OPTIONAL_BUILTINS: Dict[str, str] = {
     "openai": "langextract.providers.openai:OpenAILanguageModel",
 }
 
@@ -60,13 +61,13 @@ def _safe_entry_points(group: str) -> list:
 
 
 @functools.lru_cache(maxsize=1)
-def _discovered() -> dict[str, str]:
+def _discovered() -> Dict[str, str]:
   """Cache discovered third-party providers.
 
   Returns:
     Dictionary mapping provider names to import specs.
   """
-  discovered: dict[str, str] = {}
+  discovered: Dict[str, str] = {}
   for ep in _safe_entry_points("langextract.providers"):
     # Handle both old and new entry_points API
     if hasattr(ep, "value"):
@@ -87,7 +88,7 @@ def _discovered() -> dict[str, str]:
 
 def available_providers(
     allow_override: bool = False, include_optional: bool = True
-) -> dict[str, str]:
+) -> Dict[str, str]:
   """Get all available providers (built-in + optional + third-party).
 
   Args:

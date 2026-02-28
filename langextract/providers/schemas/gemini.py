@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +16,10 @@
 """Gemini provider schema implementation."""
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 import dataclasses
-from typing import Any
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any
 import warnings
 
 from langextract.core import data
@@ -35,19 +35,19 @@ class GeminiSchema(schema.BaseSchema):
   that Gemini can interpret via 'response_schema'.
   """
 
-  _schema_dict: dict[str, Any]
+  _schema_dict: Dict[str, Any]
 
   @property
-  def schema_dict(self) -> dict[str, Any]:
+  def schema_dict(self) -> Dict[str, Any]:
     """Returns the schema dictionary."""
     return self._schema_dict
 
   @schema_dict.setter
-  def schema_dict(self, schema_dict: dict[str, Any]) -> None:
+  def schema_dict(self, schema_dict: Dict[str, Any]) -> None:
     """Sets the schema dictionary."""
     self._schema_dict = schema_dict
 
-  def to_provider_config(self) -> dict[str, Any]:
+  def to_provider_config(self) -> Dict[str, Any]:
     """Convert schema to Gemini-specific configuration.
 
     Returns:
@@ -116,7 +116,7 @@ class GeminiSchema(schema.BaseSchema):
       A GeminiSchema with internal dictionary represents the JSON constraint.
     """
     # Track attribute types for each category
-    extraction_categories: dict[str, dict[str, set[type]]] = {}
+    extraction_categories: Dict[str, Dict[str, set[type]]] = {}
     for example in examples_data:
       for extraction in example.extractions:
         category = extraction.extraction_class
@@ -129,7 +129,7 @@ class GeminiSchema(schema.BaseSchema):
               extraction_categories[category][attr_name] = set()
             extraction_categories[category][attr_name].add(type(attr_value))
 
-    extraction_properties: dict[str, dict[str, Any]] = {}
+    extraction_properties: Dict[str, Dict[str, Any]] = {}
 
     for category, attrs in extraction_categories.items():
       extraction_properties[category] = {"type": "string"}

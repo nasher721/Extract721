@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, SecretStr
 from typing import List, Dict, Any, Optional
 
@@ -26,10 +26,12 @@ _ALLOWED_ORIGINS = os.getenv(
     "http://localhost:8000,http://127.0.0.1:8000"
 ).split(",")
 
+_ALLOW_CREDENTIALS = "*" not in _ALLOWED_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=_ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -330,6 +332,7 @@ async def extract_data(req: ExtractRequest):
                 exts = json.dumps([{"class": e.extraction_class, "text": e.extraction_text, "attributes": e.attributes} for e in ex.extractions], indent=2)
                 examples_text += f"\nExample {i}:\nText: {ex.text}\nExtractions: {exts}\n"
 
+            ex_prefix = 'Examples:\n'
             prompt = f"""{req.prompt}
 
 Return a JSON object with an "extractions" array. Each item must have:
@@ -337,12 +340,14 @@ Return a JSON object with an "extractions" array. Each item must have:
 - "extraction_text": exact quote from source
 - "attributes": object
 
-{('Examples:\n' + examples_text) if examples_text.strip() else ''}
+{(ex_prefix + examples_text) if examples_text.strip() else ''}
+
 
 TEXT TO ANALYZE:
 {req.text}
 
 Return ONLY valid JSON, no markdown fences."""
+
 
             raw = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value(), json_mode=True)
             try:
@@ -589,6 +594,14 @@ async def export_csv(req: ExportCSVRequest):
         headers={"Content-Disposition": f'attachment; filename="{safe_name}.csv"'}
     )
 
+
+# Serve explicit index.html on root
+@app.get("/")
+async def serve_index():
+    index_path = FRONTEND_DIR / "index.html"
+    if not index_path.exists():
+        raise HTTPException(status_code=404, detail="index.html not found.")
+    return FileResponse(index_path)
 
 # Mount frontend
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,12 +24,11 @@ Usage example:
     annotated_documents = annotator.annotate_documents(documents, resolver)
 """
 
-from __future__ import annotations
 
 import collections
 from collections.abc import Iterable, Iterator
 import time
-from typing import DefaultDict
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, DefaultDict
 
 from absl import logging
 
@@ -44,8 +44,8 @@ from langextract.core import tokenizer as tokenizer_lib
 
 
 def _merge_non_overlapping_extractions(
-    all_extractions: list[Iterable[data.Extraction]],
-) -> list[data.Extraction]:
+    all_extractions: List[Iterable[data.Extraction]],
+) -> List[data.Extraction]:
   """Merges extractions from multiple extraction passes.
 
   When extractions from different passes overlap in their character positions,
@@ -119,7 +119,7 @@ def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,
     restrict_repeats: bool = True,
-    tokenizer: tokenizer_lib.Tokenizer | None = None,
+    tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
 ) -> Iterator[chunking.TextChunk]:
   """Iterates over documents to yield text chunks along with the document ID.
 
@@ -170,7 +170,7 @@ class Annotator:
       format_type: data.FormatType = data.FormatType.YAML,
       attribute_suffix: str = data.ATTRIBUTE_SUFFIX,
       fence_output: bool = False,
-      format_handler: fh.FormatHandler | None = None,
+      format_handler: Optional[fh.FormatHandler] = None,
   ):
     """Initializes Annotator.
 
@@ -209,14 +209,14 @@ class Annotator:
   def annotate_documents(
       self,
       documents: Iterable[data.Document],
-      resolver: resolver_lib.AbstractResolver | None = None,
+      resolver: Optional[resolver_lib.AbstractResolver] = None,
       max_char_buffer: int = 200,
       batch_length: int = 1,
       debug: bool = True,
       extraction_passes: int = 1,
-      context_window_chars: int | None = None,
+      context_window_chars: Optional[int] = None,
       show_progress: bool = True,
-      tokenizer: tokenizer_lib.Tokenizer | None = None,
+      tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
       **kwargs,
   ) -> Iterator[data.AnnotatedDocument]:
     """Annotates a sequence of documents with NLP extractions.
@@ -289,8 +289,8 @@ class Annotator:
       batch_length: int,
       debug: bool,
       show_progress: bool = True,
-      context_window_chars: int | None = None,
-      tokenizer: tokenizer_lib.Tokenizer | None = None,
+      context_window_chars: Optional[int] = None,
+      tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
       **kwargs,
   ) -> Iterator[data.AnnotatedDocument]:
     """Single-pass annotation with stable ordering and streaming emission.
@@ -302,9 +302,9 @@ class Annotator:
     When context_window_chars is set, includes text from the previous chunk as
     context for coreference resolution across chunk boundaries.
     """
-    doc_order: list[str] = []
-    doc_text_by_id: dict[str, str] = {}
-    per_doc: DefaultDict[str, list[data.Extraction]] = collections.defaultdict(
+    doc_order: List[str] = []
+    doc_text_by_id: Dict[str, str] = {}
+    per_doc: DefaultDict[str, List[data.Extraction]] = collections.defaultdict(
         list
     )
     next_emit_idx = 0
@@ -448,8 +448,8 @@ class Annotator:
       debug: bool,
       extraction_passes: int,
       show_progress: bool = True,
-      context_window_chars: int | None = None,
-      tokenizer: tokenizer_lib.Tokenizer | None = None,
+      context_window_chars: Optional[int] = None,
+      tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
       **kwargs,
   ) -> Iterator[data.AnnotatedDocument]:
     """Sequential extraction passes logic for improved recall."""
@@ -462,8 +462,8 @@ class Annotator:
 
     document_list = list(documents)
 
-    document_extractions_by_pass: dict[str, list[list[data.Extraction]]] = {}
-    document_texts: dict[str, str] = {}
+    document_extractions_by_pass: Dict[str, List[List[data.Extraction]]] = {}
+    document_texts: Dict[str, str] = {}
     # Preserve text up-front so we can emit documents even if later passes
     # produce no extractions.
     for _doc in document_list:
@@ -527,15 +527,15 @@ class Annotator:
   def annotate_text(
       self,
       text: str,
-      resolver: resolver_lib.AbstractResolver | None = None,
+      resolver: Optional[resolver_lib.AbstractResolver] = None,
       max_char_buffer: int = 200,
       batch_length: int = 1,
-      additional_context: str | None = None,
+      additional_context: Optional[str] = None,
       debug: bool = True,
       extraction_passes: int = 1,
-      context_window_chars: int | None = None,
+      context_window_chars: Optional[int] = None,
       show_progress: bool = True,
-      tokenizer: tokenizer_lib.Tokenizer | None = None,
+      tokenizer: Optional[tokenizer_lib.Tokenizer] = None,
       **kwargs,
   ) -> data.AnnotatedDocument:
     """Annotates text with NLP extractions for text input.

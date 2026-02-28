@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +16,10 @@
 """Gemini provider for LangExtract."""
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 import concurrent.futures
 import dataclasses
-from typing import Any, Final, Iterator, Sequence
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any, Final, Iterator, Sequence
 
 from absl import logging
 
@@ -57,23 +57,23 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
   """Language model inference using Google's Gemini API with structured output."""
 
   model_id: str = _DEFAULT_MODEL_ID
-  api_key: str | None = None
+  api_key: Optional[str] = None
   vertexai: bool = False
-  credentials: Any | None = None
-  project: str | None = None
-  location: str | None = None
-  http_options: Any | None = None
-  gemini_schema: schemas.gemini.GeminiSchema | None = None
+  credentials: Optional[Any] = None
+  project: Optional[str] = None
+  location: Optional[str] = None
+  http_options: Optional[Any] = None
+  gemini_schema: Optional[schemas.gemini.GeminiSchema] = None
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
   max_workers: int = 10
   fence_output: bool = False
-  _extra_kwargs: dict[str, Any] = dataclasses.field(
+  _extra_kwargs: Dict[str, Any] = dataclasses.field(
       default_factory=dict, repr=False, compare=False
   )
 
   @classmethod
-  def get_schema_class(cls) -> type[schema.BaseSchema] | None:
+  def get_schema_class(cls) -> Optional[type[schema.BaseSchema]]:
     """Return the GeminiSchema class for structured output support.
 
     Returns:
@@ -81,7 +81,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
     """
     return schemas.gemini.GeminiSchema
 
-  def apply_schema(self, schema_instance: schema.BaseSchema | None) -> None:
+  def apply_schema(self, schema_instance: Optional[schema.BaseSchema]) -> None:
     """Apply a schema instance to this provider.
 
     Args:
@@ -94,13 +94,13 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
   def __init__(
       self,
       model_id: str = _DEFAULT_MODEL_ID,
-      api_key: str | None = None,
+      api_key: Optional[str] = None,
       vertexai: bool = False,
-      credentials: Any | None = None,
-      project: str | None = None,
-      location: str | None = None,
-      http_options: Any | None = None,
-      gemini_schema: schemas.gemini.GeminiSchema | None = None,
+      credentials: Optional[Any] = None,
+      project: Optional[str] = None,
+      location: Optional[str] = None,
+      http_options: Optional[Any] = None,
+      gemini_schema: Optional[schemas.gemini.GeminiSchema] = None,
       format_type: data.FormatType = data.FormatType.JSON,
       temperature: float = 0.0,
       max_workers: int = 10,
@@ -315,7 +315,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             for i, prompt in enumerate(batch_prompts)
         }
 
-        results: list[core_types.ScoredOutput | None] = [None] * len(
+        results: Optional[List[core_types.ScoredOutput]] = [None] * len(
             batch_prompts
         )
         for future in concurrent.futures.as_completed(future_to_index):

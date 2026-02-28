@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,6 @@
 # limitations under the License.
 
 """Classes used to represent core data types of annotation pipeline."""
-from __future__ import annotations
 
 import dataclasses
 import enum
@@ -56,8 +57,8 @@ class CharInterval:
     end_pos: The ending position of the interval (exclusive).
   """
 
-  start_pos: int | None = None
-  end_pos: int | None = None
+  start_pos: Optional[int] = None
+  end_pos: Optional[int] = None
 
 
 @dataclasses.dataclass(init=False)
@@ -83,13 +84,13 @@ class Extraction:
 
   extraction_class: str
   extraction_text: str
-  char_interval: CharInterval | None = None
-  alignment_status: AlignmentStatus | None = None
-  extraction_index: int | None = None
-  group_index: int | None = None
-  description: str | None = None
-  attributes: dict[str, str | list[str]] | None = None
-  _token_interval: tokenizer.TokenInterval | None = dataclasses.field(
+  char_interval: Optional[CharInterval] = None
+  alignment_status: Optional[AlignmentStatus] = None
+  extraction_index: Optional[int] = None
+  group_index: Optional[int] = None
+  description: Optional[str] = None
+  attributes: Dict[str, Union[str, Optional[List[str]]]] = None
+  _token_interval: Optional[tokenizer.TokenInterval] = dataclasses.field(
       default=None, repr=False, compare=False
   )
 
@@ -98,13 +99,13 @@ class Extraction:
       extraction_class: str,
       extraction_text: str,
       *,
-      token_interval: tokenizer.TokenInterval | None = None,
-      char_interval: CharInterval | None = None,
-      alignment_status: AlignmentStatus | None = None,
-      extraction_index: int | None = None,
-      group_index: int | None = None,
-      description: str | None = None,
-      attributes: dict[str, str | list[str]] | None = None,
+      token_interval: Optional[tokenizer.TokenInterval] = None,
+      char_interval: Optional[CharInterval] = None,
+      alignment_status: Optional[AlignmentStatus] = None,
+      extraction_index: Optional[int] = None,
+      group_index: Optional[int] = None,
+      description: Optional[str] = None,
+      attributes: Dict[str, Union[str, Optional[List[str]]]] = None,
   ):
     self.extraction_class = extraction_class
     self.extraction_text = extraction_text
@@ -117,11 +118,11 @@ class Extraction:
     self.attributes = attributes
 
   @property
-  def token_interval(self) -> tokenizer.TokenInterval | None:
+  def token_interval(self) -> Optional[tokenizer.TokenInterval]:
     return self._token_interval
 
   @token_interval.setter
-  def token_interval(self, value: tokenizer.TokenInterval | None) -> None:
+  def token_interval(self, value: Optional[tokenizer.TokenInterval]) -> None:
     self._token_interval = value
 
 
@@ -138,11 +139,11 @@ class Document:
   """
 
   text: str
-  additional_context: str | None = None
-  _document_id: str | None = dataclasses.field(
+  additional_context: Optional[str] = None
+  _document_id: Optional[str] = dataclasses.field(
       default=None, init=False, repr=False, compare=False
   )
-  _tokenized_text: tokenizer.TokenizedText | None = dataclasses.field(
+  _tokenized_text: Optional[tokenizer.TokenizedText] = dataclasses.field(
       init=False, default=None, repr=False, compare=False
   )
 
@@ -150,8 +151,8 @@ class Document:
       self,
       text: str,
       *,
-      document_id: str | None = None,
-      additional_context: str | None = None,
+      document_id: Optional[str] = None,
+      additional_context: Optional[str] = None,
   ):
     self.text = text
     self.additional_context = additional_context
@@ -165,7 +166,7 @@ class Document:
     return self._document_id
 
   @document_id.setter
-  def document_id(self, value: str | None) -> None:
+  def document_id(self, value: Optional[str]) -> None:
     """Sets the document ID."""
     self._document_id = value
 
@@ -192,21 +193,21 @@ class AnnotatedDocument:
     tokenized_text: Tokenized text of the document, computed from `text`.
   """
 
-  extractions: list[Extraction] | None = None
-  text: str | None = None
-  _document_id: str | None = dataclasses.field(
+  extractions: Optional[List[Extraction]] = None
+  text: Optional[str] = None
+  _document_id: Optional[str] = dataclasses.field(
       default=None, init=False, repr=False, compare=False
   )
-  _tokenized_text: tokenizer.TokenizedText | None = dataclasses.field(
+  _tokenized_text: Optional[tokenizer.TokenizedText] = dataclasses.field(
       init=False, default=None, repr=False, compare=False
   )
 
   def __init__(
       self,
       *,
-      document_id: str | None = None,
-      extractions: list[Extraction] | None = None,
-      text: str | None = None,
+      document_id: Optional[str] = None,
+      extractions: Optional[List[Extraction]] = None,
+      text: Optional[str] = None,
   ):
     self.extractions = extractions
     self.text = text
@@ -220,12 +221,12 @@ class AnnotatedDocument:
     return self._document_id
 
   @document_id.setter
-  def document_id(self, value: str | None) -> None:
+  def document_id(self, value: Optional[str]) -> None:
     """Sets the document ID."""
     self._document_id = value
 
   @property
-  def tokenized_text(self) -> tokenizer.TokenizedText | None:
+  def tokenized_text(self) -> Optional[tokenizer.TokenizedText]:
     if self._tokenized_text is None and self.text is not None:
       self._tokenized_text = tokenizer.tokenize(self.text)
     return self._tokenized_text
@@ -245,4 +246,4 @@ class ExampleData:
   """
 
   text: str
-  extractions: list[Extraction] = dataclasses.field(default_factory=list)
+  extractions: List[Extraction] = dataclasses.field(default_factory=list)

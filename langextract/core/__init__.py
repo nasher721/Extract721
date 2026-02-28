@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,6 @@ LangExtract. Each module can be imported independently for fine-grained
 dependency management in build systems.
 """
 
-from __future__ import annotations
 
 __all__ = [
     "base_model",

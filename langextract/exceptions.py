@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,6 @@ All new code should import directly from langextract.core.exceptions.
 """
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 from langextract.core import exceptions as core_exceptions
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,6 @@ In the context of this module, a "resolver" is a component designed to parse and
 transform the textual output of an LLM into structured data.
 """
 
-from __future__ import annotations
 
 import abc
 import collections
@@ -125,7 +125,7 @@ class AbstractResolver(abc.ABC):
       extractions: Sequence[data.Extraction],
       source_text: str,
       token_offset: int,
-      char_offset: int | None = None,
+      char_offset: Optional[int] = None,
       enable_fuzzy_alignment: bool = True,
       fuzzy_alignment_threshold: float = _FUZZY_ALIGNMENT_MIN_THRESHOLD,
       accept_match_lesser: bool = True,
@@ -180,8 +180,8 @@ class Resolver(AbstractResolver):
 
   def __init__(
       self,
-      format_handler: fh.FormatHandler | None = None,
-      extraction_index_suffix: str | None = None,
+      format_handler: Optional[fh.FormatHandler] = None,
+      extraction_index_suffix: Optional[str] = None,
       **kwargs,  # Collect legacy parameters
   ):
     """Constructor.
@@ -281,11 +281,11 @@ class Resolver(AbstractResolver):
       extractions: Sequence[data.Extraction],
       source_text: str,
       token_offset: int,
-      char_offset: int | None = None,
+      char_offset: Optional[int] = None,
       enable_fuzzy_alignment: bool = True,
       fuzzy_alignment_threshold: float = _FUZZY_ALIGNMENT_MIN_THRESHOLD,
       accept_match_lesser: bool = True,
-      tokenizer_inst: tokenizer_lib.Tokenizer | None = None,
+      tokenizer_inst: Optional[tokenizer_lib.Tokenizer] = None,
       **kwargs,
   ) -> Iterator[data.Extraction]:
     """Aligns annotated extractions with source text.
@@ -488,13 +488,13 @@ class WordAligner:
   def __init__(self):
     """Initialize the WordAligner with difflib SequenceMatcher."""
     self.matcher = difflib.SequenceMatcher(autojunk=False)
-    self.source_tokens: Sequence[str] | None = None
-    self.extraction_tokens: Sequence[str] | None = None
+    self.source_tokens: Optional[Sequence[str]] = None
+    self.extraction_tokens: Optional[Sequence[str]] = None
 
   def _set_seqs(
       self,
-      source_tokens: Sequence[str] | Iterator[str],
-      extraction_tokens: Sequence[str] | Iterator[str],
+      source_tokens: Union[Sequence[str], Iterator[str]],
+      extraction_tokens: Union[Sequence[str], Iterator[str]],
   ):
     """Sets the source and extraction tokens for alignment.
 
@@ -517,7 +517,7 @@ class WordAligner:
     self.extraction_tokens = extraction_tokens
     self.matcher.set_seqs(a=source_tokens, b=extraction_tokens)
 
-  def _get_matching_blocks(self) -> Sequence[tuple[int, int, int]]:
+  def _get_matching_blocks(self) -> Sequence[Tuple[int, int, int]]:
     """Utilizes difflib SequenceMatcher and returns matching blocks of tokens.
 
     Returns:
@@ -537,13 +537,13 @@ class WordAligner:
   def _fuzzy_align_extraction(
       self,
       extraction: data.Extraction,
-      source_tokens: list[str],
+      source_tokens: List[str],
       tokenized_text: tokenizer_lib.TokenizedText,
       token_offset: int,
       char_offset: int,
       fuzzy_alignment_threshold: float = _FUZZY_ALIGNMENT_MIN_THRESHOLD,
-      tokenizer_impl: tokenizer_lib.Tokenizer | None = None,
-  ) -> data.Extraction | None:
+      tokenizer_impl: Optional[tokenizer_lib.Tokenizer] = None,
+  ) -> Optional[data.Extraction]:
     """Fuzzy-align an extraction using difflib.SequenceMatcher on tokens.
 
     The algorithm scans every candidate window in `source_tokens` and selects
@@ -584,7 +584,7 @@ class WordAligner:
     )
 
     best_ratio = 0.0
-    best_span: tuple[int, int] | None = None  # (start_idx, window_size)
+    best_span: Tuple[int, Optional[int]] = None  # (start_idx, window_size)
 
     len_e = len(extraction_tokens)
     max_window = len(source_tokens)
@@ -670,7 +670,7 @@ class WordAligner:
       enable_fuzzy_alignment: bool = True,
       fuzzy_alignment_threshold: float = _FUZZY_ALIGNMENT_MIN_THRESHOLD,
       accept_match_lesser: bool = True,
-      tokenizer_impl: tokenizer_lib.Tokenizer | None = None,
+      tokenizer_impl: Optional[tokenizer_lib.Tokenizer] = None,
   ) -> Sequence[Sequence[data.Extraction]]:
     """Aligns extractions with their positions in the source text.
 
@@ -761,7 +761,7 @@ class WordAligner:
         )
         extraction_index += len(extraction_text_tokens) + delim_len
 
-    aligned_extraction_groups: list[list[data.Extraction]] = [
+    aligned_extraction_groups: List[List[data.Extraction]] = [
         [] for _ in extraction_groups
     ]
     tokenized_text = (
@@ -873,7 +873,7 @@ class WordAligner:
 
 def _tokenize_with_lowercase(
     text: str,
-    tokenizer_inst: tokenizer_lib.Tokenizer | None = None,
+    tokenizer_inst: Optional[tokenizer_lib.Tokenizer] = None,
 ) -> Iterator[str]:
   """Extract and lowercase tokens from the input text into words.
 

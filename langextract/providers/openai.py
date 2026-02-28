@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +16,10 @@
 """OpenAI provider for LangExtract."""
 # pylint: disable=duplicate-code
 
-from __future__ import annotations
 
 import concurrent.futures
 import dataclasses
-from typing import Any, Iterator, Sequence
+from typing import Union, Optional, List, Dict, Any, Sequence, Set, Tuple, Any, Iterator, Sequence
 
 from langextract.core import base_model
 from langextract.core import data
@@ -39,14 +39,14 @@ class OpenAILanguageModel(base_model.BaseLanguageModel):
   """Language model inference using OpenAI's API with structured output."""
 
   model_id: str = 'gpt-4o-mini'
-  api_key: str | None = None
-  base_url: str | None = None
-  organization: str | None = None
+  api_key: Optional[str] = None
+  base_url: Optional[str] = None
+  organization: Optional[str] = None
   format_type: data.FormatType = data.FormatType.JSON
-  temperature: float | None = None
+  temperature: Optional[float] = None
   max_workers: int = 10
   _client: Any = dataclasses.field(default=None, repr=False, compare=False)
-  _extra_kwargs: dict[str, Any] = dataclasses.field(
+  _extra_kwargs: Dict[str, Any] = dataclasses.field(
       default_factory=dict, repr=False, compare=False
   )
 
@@ -60,11 +60,11 @@ class OpenAILanguageModel(base_model.BaseLanguageModel):
   def __init__(
       self,
       model_id: str = 'gpt-4o-mini',
-      api_key: str | None = None,
-      base_url: str | None = None,
-      organization: str | None = None,
+      api_key: Optional[str] = None,
+      base_url: Optional[str] = None,
+      organization: Optional[str] = None,
       format_type: data.FormatType = data.FormatType.JSON,
-      temperature: float | None = None,
+      temperature: Optional[float] = None,
       max_workers: int = 10,
       **kwargs,
   ) -> None:
@@ -243,7 +243,7 @@ class OpenAILanguageModel(base_model.BaseLanguageModel):
             for i, prompt in enumerate(batch_prompts)
         }
 
-        results: list[core_types.ScoredOutput | None] = [None] * len(
+        results: Optional[List[core_types.ScoredOutput]] = [None] * len(
             batch_prompts
         )
         for future in concurrent.futures.as_completed(future_to_index):
