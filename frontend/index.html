@@ -90,56 +90,151 @@
       </div>
       <div class="panel-body">
 
-        <!-- API Key -->
+
+        <!-- ── Provider + API Key ── -->
         <section class="config-section">
           <h3 class="section-label">
-            <span class="section-icon">🔑</span> API Key
+            <span class="section-icon">🔑</span> Provider &amp; API Key
           </h3>
-          <div class="input-group">
-            <div class="input-wrapper secret">
-              <input type="password" id="apiKey" class="form-input" placeholder="Enter your Gemini API key…"
-                autocomplete="off" />
-              <button class="input-toggle-btn" id="toggleApiKey" title="Show/hide key">
-                <svg id="eyeOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <svg id="eyeClosed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" style="display:none">
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              </button>
+
+          <!-- Provider tabs -->
+          <div class="provider-tabs" id="providerTabs">
+            <button class="provider-tab active" data-provider="gemini">
+              <span class="provider-logo">✦</span> Gemini
+            </button>
+            <button class="provider-tab" data-provider="openai">
+              <span class="provider-logo">⊕</span> OpenAI
+            </button>
+            <button class="provider-tab" data-provider="claude">
+              <span class="provider-logo">◇</span> Claude
+            </button>
+            <button class="provider-tab" data-provider="glm">
+              <span class="provider-logo">⊗</span> GLM
+            </button>
+          </div>
+
+          <!-- Per-provider key inputs (only active one is shown) -->
+          <div class="provider-key-panels">
+            <div class="provider-key-panel" id="keyPanel-gemini">
+              <div class="input-wrapper secret">
+                <input type="password" id="apiKey-gemini" class="form-input" placeholder="AIza… (Gemini API key)"
+                  autocomplete="off" />
+                <button class="input-toggle-btn" data-toggle="apiKey-gemini" title="Show/hide">
+                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" style="display:none">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <p class="input-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                  rel="noopener" class="link">aistudio.google.com</a></p>
             </div>
-            <p class="input-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank"
-                class="link">aistudio.google.com</a></p>
+            <div class="provider-key-panel" id="keyPanel-openai" style="display:none">
+              <div class="input-wrapper secret">
+                <input type="password" id="apiKey-openai" class="form-input" placeholder="sk-… (OpenAI API key)"
+                  autocomplete="off" />
+                <button class="input-toggle-btn" data-toggle="apiKey-openai" title="Show/hide">
+                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" style="display:none">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <p class="input-hint">Get a key at <a href="https://platform.openai.com/api-keys" target="_blank"
+                  rel="noopener" class="link">platform.openai.com</a></p>
+            </div>
+            <div class="provider-key-panel" id="keyPanel-claude" style="display:none">
+              <div class="input-wrapper secret">
+                <input type="password" id="apiKey-claude" class="form-input" placeholder="sk-ant-… (Anthropic key)"
+                  autocomplete="off" />
+                <button class="input-toggle-btn" data-toggle="apiKey-claude" title="Show/hide">
+                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" style="display:none">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <p class="input-hint">Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank"
+                  rel="noopener" class="link">console.anthropic.com</a></p>
+            </div>
+            <div class="provider-key-panel" id="keyPanel-glm" style="display:none">
+              <div class="input-wrapper secret">
+                <input type="password" id="apiKey-glm" class="form-input" placeholder="ZhipuAI API key"
+                  autocomplete="off" />
+                <button class="input-toggle-btn" data-toggle="apiKey-glm" title="Show/hide">
+                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" style="display:none">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <p class="input-hint">Get a key at <a href="https://open.bigmodel.cn/usercenter/apikeys" target="_blank"
+                  rel="noopener" class="link">open.bigmodel.cn</a></p>
+            </div>
           </div>
         </section>
 
-        <!-- Model Selection -->
+        <!-- ── Model Selection ── -->
         <section class="config-section">
           <h3 class="section-label">
             <span class="section-icon">🤖</span> Model
           </h3>
-          <div class="model-grid">
-            <button class="model-btn active" data-model="gemini-2.5-flash" id="modelFlash">
-              <span class="model-name">Gemini 2.5 Flash</span>
-              <span class="model-badge recommended">Recommended</span>
-            </button>
-            <button class="model-btn" data-model="gemini-2.5-pro" id="modelPro">
-              <span class="model-name">Gemini 2.5 Pro</span>
-              <span class="model-badge pro">Powerful</span>
-            </button>
-            <button class="model-btn" data-model="custom" id="modelCustom">
-              <span class="model-name">Custom</span>
-              <span class="model-badge custom">Any</span>
-            </button>
-          </div>
-          <input type="text" id="customModelId" class="form-input mt-2" placeholder="e.g. gpt-4o, gemma2:2b…"
-            style="display:none;" />
+          <select id="modelSelect" class="form-input" style="cursor:pointer;">
+            <optgroup label="Gemini" id="modelGroup-gemini">
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            </optgroup>
+            <optgroup label="OpenAI" id="modelGroup-openai" style="display:none">
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini">GPT-4o mini</option>
+              <option value="gpt-4-turbo">GPT-4 Turbo</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            </optgroup>
+            <optgroup label="Claude" id="modelGroup-claude" style="display:none">
+              <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+              <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+              <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+            </optgroup>
+            <optgroup label="GLM (ZhipuAI)" id="modelGroup-glm" style="display:none">
+              <option value="glm-4">GLM-4</option>
+              <option value="glm-4-flash">GLM-4 Flash</option>
+              <option value="glm-4-air">GLM-4 Air</option>
+              <option value="glm-4-plus">GLM-4 Plus</option>
+            </optgroup>
+          </select>
+          <p class="input-hint" id="modelHint" style="margin-top:6px;">gemini-2.5-flash</p>
         </section>
+
 
         <!-- Prompt Description -->
         <section class="config-section">

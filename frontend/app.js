@@ -5,10 +5,24 @@
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
+const PROVIDER_MODELS = {
+    gemini: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    claude: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+    glm: ['glm-4', 'glm-4-flash', 'glm-4-air', 'glm-4-plus']
+};
+
 const state = {
     mode: 'standard',            // 'standard' | 'clinical' | 'structured'
-    selectedModel: 'gemini-2.0-flash',
-    clinicalModel: 'gemini-2.0-flash',
+    provider: localStorage.getItem('lx_provider') || 'gemini',
+    selectedModel: 'gemini-2.5-flash',
+    clinicalModel: 'gemini-2.5-flash',
+    apiKeys: {
+        gemini: localStorage.getItem('apiKey_gemini') || '',
+        openai: localStorage.getItem('apiKey_openai') || '',
+        claude: localStorage.getItem('apiKey_claude') || '',
+        glm: localStorage.getItem('apiKey_glm') || '',
+    },
     examples: [],
     currentTemplate: 'literary',
     clinStructuredData: null,
@@ -17,7 +31,7 @@ const state = {
         { id: Date.now(), name: 'Patient Name', type: 'string', description: 'Full name of the patient' },
         { id: Date.now() + 1, name: 'Diagnoses', type: 'array', description: 'List of confirmed medical diagnoses' }
     ],
-    structModel: 'gemini-2.0-flash'
+    structModel: 'gemini-2.5-flash'
 };
 
 // ─── DOM Shortcuts ────────────────────────────────────────────────────────────
@@ -61,6 +75,7 @@ const CLIN_SECTIONS = [
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    initConfig();
     initModeToggle();
     initStandardMode();
     initClinicalMode();
@@ -82,6 +97,111 @@ function initModeToggle() {
             $('structuredMain').style.display = mode === 'structured' ? 'grid' : 'none';
         });
     });
+}
+
+// ─── Provider / API Key / Model Config ───────────────────────────────────────
+
+function getActiveKey() {
+    return state.apiKeys[state.provider] || '';
+}
+
+function switchProvider(provider) {
+    state.provider = provider;
+    localStorage.setItem('lx_provider', provider);
+
+    // Highlight tab
+    document.querySelectorAll('.provider-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.provider === provider);
+    });
+
+    // Show/hide key panels
+    ['gemini', 'openai', 'claude', 'glm'].forEach(p => {
+        const panel = $(`keyPanel-${p}`);
+        if (panel) panel.style.display = p === provider ? '' : 'none';
+    });
+
+    // Show only the relevant optgroup in the model select
+    ['gemini', 'openai', 'claude', 'glm'].forEach(p => {
+        const grp = $(`modelGroup-${p}`);
+        if (grp) grp.style.display = p === provider ? '' : 'none';
+    });
+
+    // Set model select to first option of the new provider
+    const select = $('modelSelect');
+    if (select) {
+        const opts = select.querySelectorAll(`#modelGroup-${provider} option`);
+        if (opts.length) {
+            select.value = opts[0].value;
+            state.selectedModel = opts[0].value;
+            state.clinicalModel = opts[0].value;
+            state.structModel = opts[0].value;
+            const hint = $('modelHint');
+            if (hint) hint.textContent = opts[0].value;
+        }
+    }
+}
+
+function initConfig() {
+    const providers = ['gemini', 'openai', 'claude', 'glm'];
+
+    // Load persisted keys into inputs
+    providers.forEach(p => {
+        const input = $(`apiKey-${p}`);
+        if (input) {
+            input.value = state.apiKeys[p];
+            input.addEventListener('input', () => {
+                state.apiKeys[p] = input.value.trim();
+                localStorage.setItem(`apiKey_${p}`, state.apiKeys[p]);
+                // Backwards-compat: keep GEMINI_API_KEY if gemini
+                if (p === 'gemini') localStorage.setItem('GEMINI_API_KEY', state.apiKeys[p]);
+            });
+        }
+    });
+
+    // Eye-toggle for each key
+    document.querySelectorAll('.input-toggle-btn[data-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const inputId = btn.dataset.toggle;
+            const input = $(inputId);
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            btn.querySelector('.eye-open').style.display = isPassword ? 'block' : 'none';
+            btn.querySelector('.eye-closed').style.display = isPassword ? 'none' : 'block';
+        });
+    });
+
+    // Provider tab switching
+    document.querySelectorAll('.provider-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchProvider(tab.dataset.provider));
+    });
+
+    // Model dropdown
+    const modelSel = $('modelSelect');
+    if (modelSel) {
+        modelSel.addEventListener('change', () => {
+            state.selectedModel = modelSel.value;
+            state.clinicalModel = modelSel.value;
+            state.structModel = modelSel.value;
+            const hint = $('modelHint');
+            if (hint) hint.textContent = modelSel.value;
+        });
+    }
+
+    // Restore provider + model from last session
+    switchProvider(state.provider);
+    const savedModel = localStorage.getItem('lx_model');
+    if (savedModel && modelSel) {
+        modelSel.value = savedModel;
+        state.selectedModel = savedModel;
+        state.clinicalModel = savedModel;
+        state.structModel = savedModel;
+    }
+    if (modelSel) {
+        modelSel.addEventListener('change', () => {
+            localStorage.setItem('lx_model', modelSel.value);
+        });
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -289,8 +409,8 @@ function updateExamplesCount() {
 // Extraction ───────────────────────────────────────────────────────────────────
 
 async function runExtraction() {
-    const apiKey = $('apiKey').value.trim();
-    if (!apiKey) { showToast('Please enter your API key', 'error'); return; }
+    const apiKey = getActiveKey();
+    if (!apiKey) { showToast(`Please enter your ${state.provider.toUpperCase()} API key`, 'error'); return; }
 
     const text = $('inputText').value.trim();
     if (!text) { showToast('Please enter some text to analyze', 'error'); return; }
@@ -313,8 +433,9 @@ async function runExtraction() {
                 attributes: ext.attributes,
             })),
         })),
-        model_id: modelId,
+        model_id: state.selectedModel,
         api_key: apiKey,
+        provider: state.provider,
     };
 
     try {
@@ -474,8 +595,8 @@ function initClinicalMode() {
 }
 
 async function runClinicalExtraction() {
-    const apiKey = $('clinicalApiKey').value.trim();
-    if (!apiKey) { showToast('Please enter your API key', 'error'); return; }
+    const apiKey = getActiveKey();
+    if (!apiKey) { showToast(`Please enter your ${state.provider.toUpperCase()} API key`, 'error'); return; }
 
     const noteText = $('clinicalNoteText').value.trim();
     if (!noteText) { showToast('Please paste an EMR note first', 'error'); return; }
@@ -491,6 +612,7 @@ async function runClinicalExtraction() {
                 note_text: noteText,
                 model_id: state.clinicalModel,
                 api_key: apiKey,
+                provider: state.provider,
             }),
         });
 
@@ -848,8 +970,8 @@ async function runStructuredExtraction() {
     output.style.display = 'none';
 
     try {
-        const apiKey = localStorage.getItem('GEMINI_API_KEY');
-        if (!apiKey) throw new Error('API Key missing. Set it in the top config panel.');
+        const apiKey = getActiveKey();
+        if (!apiKey) throw new Error(`Please enter your ${state.provider.toUpperCase()} API key in the config panel.`);
 
         const response = await fetch('/api/extract-structured', {
             method: 'POST',
@@ -858,7 +980,8 @@ async function runStructuredExtraction() {
                 text: text,
                 extraction_schema: state.schemaFields,
                 model_id: state.structModel,
-                api_key: apiKey
+                api_key: apiKey,
+                provider: state.provider,
             })
         });
 
