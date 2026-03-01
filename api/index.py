@@ -21,8 +21,17 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 # Ensure local package can be imported
 if str(BASE_DIR) not in sys.path:
     sys.path.append(str(BASE_DIR))
+if str(API_DIR) not in sys.path:
+    sys.path.append(str(API_DIR))
 
 import langextract as lx
+from models import (
+    ExtractRequest, ClinicalExtractRequest, StructuredExtractRequest,
+    BatchExtractItem, BatchExtractRequest, ExportCSVRequest, SchemaField
+)
+from prompts import CLINICAL_PROMPT_TEMPLATE
+from llm import PROVIDER_MODELS, call_llm_with_retry, clean_json_response
+from parsers import parse_upload_file
 
 # Resolve paths relative to this file so the server works from any CWD
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,249 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Clinical EMR Extraction Prompt ───────────────────────────────────────────
 
-CLINICAL_PROMPT_TEMPLATE = """You are a clinical document cleaning and structured extraction engine.
-
-PRIMARY GOAL:
-Remove unnecessary EMR clutter and extract only clinically relevant information.
-
-You must aggressively eliminate:
-- Administrative artifacts (Expand All, Cosign Needed, ICU checklist)
-- Device inventory unless clinically relevant
-- Duplicate section headers
-- Repeated medication tables
-- Workflow checklists (CAM, RASS, mobility goals, line necessity reviews)
-- Billing or quality metrics
-- Full medication lists unless clinically relevant
-- Redundant normal findings
-- Boilerplate text
-
-Retain only medically meaningful data for clinical reasoning.
-
---------------------------------------------------
-EXTRACT ONLY THE FOLLOWING SECTIONS:
---------------------------------------------------
-
-1. History of Present Illness (HPI)
-   - Chief issue
-   - Surgical/medical context
-   - Pertinent intraoperative events
-   - Current status
-
-2. Past Medical History (PMH) - Chronic conditions only
-
-3. Past Surgical History (PSH)
-
-4. Family History - Only relevant items
-
-5. Social History - Tobacco, alcohol, drugs (if present)
-
-6. Allergies - Medication + reaction
-
-7. Current Medications
-   Include: Active inpatient meds, pressors, insulin regimens, antibiotics, anticoagulation, steroids
-   Exclude: Long outpatient lists unless directly relevant
-
-8. Vitals - Most recent values, abnormal values, pressor/oxygen support
-
-9. Physical Exam - Pertinent positives only, exclude normal boilerplate
-
-10. Neurologic Exam (structured)
-    - GCS, mental status, cranial nerve abnormalities, motor/sensory findings, new vs baseline deficits
-
-11. Labs - Abnormal values, trending changes, clinically meaningful labs only
-
-12. Imaging - Relevant imaging performed/pending + reason
-
-13. Active Problems - Concise problem list, acute vs chronic
-
-14. Assessment / Impression - Clinical reasoning summary, postoperative risks, differential if present
-
-15. Plan - Actionable medical plans only:
-    monitoring, imaging, medications, hemodynamic goals, glycemic management,
-    infection management, DVT prophylaxis, consults, disposition planning
-
-16. Orders - New orders only (imaging, meds, labs, consults); exclude routine nursing workflow orders
-
---------------------------------------------------
-OUTPUT RULES
---------------------------------------------------
-
-- Output clean JSON only. No markdown fences, no commentary.
-- Do not include checklists or quality metrics.
-- Do not include repetitive medication tables.
-- Remove device inventories unless clinically relevant.
-- Collapse redundant text.
-- Preserve trends (e.g., Hgb 10.4 -> 8.5).
-- Preserve numeric precision.
-- If a section is not present, return null.
-
-Return ONLY valid JSON in exactly this format, nothing else:
-
-{{
-  "history": null,
-  "past_medical_history": null,
-  "past_surgical_history": null,
-  "family_history": null,
-  "social_history": null,
-  "allergies": null,
-  "current_medications": null,
-  "vitals": null,
-  "exam": null,
-  "neurologic_exam": null,
-  "labs": null,
-  "imaging": null,
-  "active_problems": null,
-  "assessment_impression": null,
-  "plan": null,
-  "orders": null
-}}
-
---------------------------------------------------
-TEXT TO PROCESS:
---------------------------------------------------
-
-{note_text}
-"""
-
-# ─── Model Catalogues ──────────────────────────────────────────────────────────
-
-PROVIDER_MODELS = {
-    "gemini": ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro"],
-    "openai": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
-    "claude": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"],
-    "glm": ["glm-4", "glm-4-flash", "glm-4-air", "glm-4-plus"],
-}
-
-# ─── Unified LLM Caller ───────────────────────────────────────────────────────
-
-def call_llm(prompt: str, provider: str, model_id: str, api_key: str,
-             json_mode: bool = False, stream: bool = False):
-    """
-    Route a prompt to the correct LLM provider and return the response text.
-    For streaming (Gemini only for now) returns the raw response object.
-    Raises ValueError for unsupported providers.
-    """
-    provider = provider.lower().strip()
-
-    if provider == "gemini":
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        gen_config = {}
-        if json_mode:
-            gen_config["response_mime_type"] = "application/json"
-        model = genai.GenerativeModel(model_id)
-        if stream:
-            return model.generate_content(prompt, stream=True, generation_config=gen_config)
-        response = model.generate_content(prompt, generation_config=gen_config)
-        return response.text.strip()
-
-    elif provider == "openai":
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
-        messages = [{"role": "user", "content": prompt}]
-        kwargs = {
-            "model": model_id,
-            "messages": messages,
-        }
-        if json_mode:
-            kwargs["response_format"] = {"type": "json_object"}
-        response = client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content.strip()
-
-    elif provider == "claude":
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model=model_id,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.content[0].text.strip()
-
-    elif provider == "glm":
-        from zhipuai import ZhipuAI
-        client = ZhipuAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model=model_id,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
-
-    else:
-        raise ValueError(f"Unsupported provider: '{provider}'. Choose from: gemini, openai, claude, glm")
-
-
-def clean_json_response(raw: str) -> dict:
-    """Strip markdown fences and parse JSON from LLM output."""
-    clean = re.sub(r'^```(?:json)?\s*', '', raw, flags=re.MULTILINE)
-    clean = re.sub(r'\s*```$', '', clean, flags=re.MULTILINE)
-    try:
-        return json.loads(clean.strip())
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Model returned invalid JSON — could not parse response: {e}"
-        )
-
-
-def call_llm_with_retry(prompt: str, provider: str, model_id: str, api_key: str,
-                        json_mode: bool = False, max_retries: int = 3) -> str:
-    """call_llm wrapper with exponential backoff on 429/503."""
-    delay = 2.0
-    last_err = None
-    for attempt in range(max_retries):
-        try:
-            return call_llm(prompt, provider, model_id, api_key, json_mode=json_mode)
-        except Exception as e:
-            msg = str(e).lower()
-            if any(code in msg for code in ("429", "rate", "503", "overloaded")):
-                last_err = e
-                if attempt < max_retries - 1:
-                    time.sleep(delay)
-                    delay *= 2
-            else:
-                raise
-    raise HTTPException(status_code=429, detail=f"Provider rate-limited after {max_retries} retries: {last_err}")
-
-
-# ─── Request / Response Models ────────────────────────────────────────────────
-
-class ExtractionParam(BaseModel):
-    extraction_class: str
-    extraction_text: str
-    attributes: Dict[str, Any]
-
-class ExampleParam(BaseModel):
-    text: str
-    extractions: List[ExtractionParam]
-
-class ExtractRequest(BaseModel):
-    text: str
-    prompt: str
-    examples: List[ExampleParam]
-    model_id: str = "gemini-2.5-flash"
-    api_key: SecretStr
-    provider: str = "gemini"
-
-class ClinicalExtractRequest(BaseModel):
-    note_text: str
-    model_id: str = "gemini-2.5-flash"
-    api_key: SecretStr
-    provider: str = "gemini"
-
-class SchemaField(BaseModel):
-    name: str
-    type: str  # string, number, boolean, array, object
-    description: str
-
-class StructuredExtractRequest(BaseModel):
-    text: str
-    extraction_schema: List[SchemaField]
-    model_id: str = "gemini-2.5-flash"
-    api_key: SecretStr
-    provider: str = "gemini"
 
 # ─── Provider Catalogue Endpoint ──────────────────────────────────────────────
 
@@ -483,62 +250,10 @@ RULES:
 @app.post("/api/parse-file")
 async def parse_file(file: UploadFile = File(...)):
     """Extract plain text from an uploaded PDF, DOCX, or TXT file."""
-    filename = (file.filename or "").lower()
-    try:
-        content = await file.read()
-        if filename.endswith(".txt"):
-            return {"text": content.decode("utf-8", errors="replace"), "filename": file.filename}
-
-        elif filename.endswith(".pdf"):
-            try:
-                import pdfplumber
-            except ImportError:
-                raise HTTPException(status_code=422, detail="pdfplumber not installed. Run: pip install pdfplumber")
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(content)
-                tmp_path = tmp.name
-            pages = []
-            with pdfplumber.open(tmp_path) as pdf:
-                for page in pdf.pages:
-                    pages.append(page.extract_text() or "")
-            os.unlink(tmp_path)
-            return {"text": "\n\n".join(pages), "filename": file.filename, "pages": len(pages)}
-
-        elif filename.endswith(".docx"):
-            try:
-                from docx import Document as DocxDocument
-            except ImportError:
-                raise HTTPException(status_code=422, detail="python-docx not installed. Run: pip install python-docx")
-            with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
-                tmp.write(content)
-                tmp_path = tmp.name
-            doc = DocxDocument(tmp_path)
-            os.unlink(tmp_path)
-            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-            return {"text": "\n\n".join(paragraphs), "filename": file.filename}
-
-        else:
-            raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.filename}. Supported: .txt, .pdf, .docx")
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
+    return await parse_upload_file(file)
 
 
 # ─── Batch Extraction Endpoint ─────────────────────────────────────────────────
-
-class BatchExtractItem(BaseModel):
-    id: str
-    text: str
-
-class BatchExtractRequest(BaseModel):
-    items: List[BatchExtractItem]
-    prompt: str
-    extraction_schema: List[SchemaField]
-    model_id: str = "gemini-2.5-flash"
-    api_key: SecretStr
-    provider: str = "gemini"
 
 @app.post("/api/extract-batch")
 async def extract_batch(req: BatchExtractRequest):
@@ -579,10 +294,6 @@ FIELDS:
 
 
 # ─── CSV Export Helper ─────────────────────────────────────────────────────────
-
-class ExportCSVRequest(BaseModel):
-    rows: List[Dict[str, Any]]
-    filename: str = "langextract_export"
 
 @app.post("/api/export-csv")
 async def export_csv(req: ExportCSVRequest):
