@@ -184,10 +184,44 @@ export async function runClinicalExtraction() {
 
 function displayClinicalResults(data) {
     const cardsEl = $('clinTabCardsContent');
+    const summaryEl = $('clinSmartSummary');
     if (!cardsEl) return;
     cardsEl.innerHTML = '';
 
-    // Sort sections based on CLIN_SECTIONS order
+    // 1. Generate Smart Summary
+    if (summaryEl) {
+        summaryEl.classList.remove('u-hidden');
+        summaryEl.classList.add('u-block');
+        const assessment = data.assessment || data.summary || "No assessment found.";
+        const plan = Array.isArray(data.plan) ? data.plan : (data.plan ? [data.plan] : []);
+        const diagnosis = data.diagnosis || data.chief_complaint || "Undetermined";
+
+        summaryEl.innerHTML = `
+            <div class="summary-headline">
+                <span class="u-fs-lg">🧠</span> Smart Case Summary
+            </div>
+            <div class="summary-content">
+                <strong>Primary Impression:</strong> ${escHtml(typeof diagnosis === 'string' ? diagnosis : JSON.stringify(diagnosis))}<br>
+                <strong>AI Assessment:</strong> ${escHtml(typeof assessment === 'string' ? assessment : JSON.stringify(assessment))}
+            </div>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value">${CLIN_SECTIONS.filter(s => data[s.key]).length}</div>
+                    <div class="stat-label">Sections Found</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${plan.length}</div>
+                    <div class="stat-label">Plan Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.vitals ? 'Yes' : 'No'}</div>
+                    <div class="stat-label">Vitals Captured</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. Render Cards
     CLIN_SECTIONS.forEach(sec => {
         const val = data[sec.key];
         if (val === null || val === undefined || (Array.isArray(val) && val.length === 0)) return;
@@ -208,9 +242,28 @@ function displayClinicalResults(data) {
             <div class="clin-card-header">
                 <span class="clin-card-icon">${sec.icon}</span>
                 <span class="clin-card-title">${sec.label}</span>
+                <button class="btn-icon btn-copy-card" title="Copy section">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                </button>
             </div>
             <div class="clin-card-body">${contentHtml}</div>
         `;
+
+        const copyBtn = card.querySelector('.btn-copy-card');
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let textToCopy = '';
+            if (typeof val === 'string') textToCopy = val;
+            else if (Array.isArray(val)) textToCopy = val.join('\n');
+            else textToCopy = JSON.stringify(val, null, 2);
+
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => showToast(`${sec.label} copied!`, 'success'));
+        });
+
         cardsEl.appendChild(card);
     });
 
