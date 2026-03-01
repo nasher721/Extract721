@@ -12,6 +12,25 @@ const PROVIDER_MODELS = {
     glm: ['glm-4', 'glm-4-flash', 'glm-4-air', 'glm-4-plus']
 };
 
+const debounce = (fn, delay = 150) => {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+};
+
+const TEMPLATES = {
+    literary: `Extract characters, emotions, and relationships in order of appearance.
+Use exact text for extractions. Do not paraphrase or overlap entities.
+Provide meaningful attributes for each entity to add context.`,
+    medical: `Extract medical entities: diagnoses, medications, dosages, procedures, and symptoms.
+Use exact text. Include severity, laterality, and clinical context as attributes.`,
+    news: `Extract named entities: people, organizations, locations, and events.
+Include roles, relationships, and dates as attributes where present.`,
+    custom: ``,
+};
+
 const state = {
     mode: 'standard',            // 'standard' | 'clinical' | 'structured'
     provider: localStorage.getItem('lx_provider') || 'gemini',
@@ -48,19 +67,6 @@ const state = {
 
 const $ = id => document.getElementById(id);
 
-// ─── Prompt Templates ─────────────────────────────────────────────────────────
-
-const TEMPLATES = {
-    literary: `Extract characters, emotions, and relationships in order of appearance.
-Use exact text for extractions. Do not paraphrase or overlap entities.
-Provide meaningful attributes for each entity to add context.`,
-    medical: `Extract medical entities: diagnoses, medications, dosages, procedures, and symptoms.
-Use exact text. Include severity, laterality, and clinical context as attributes.`,
-    news: `Extract named entities: people, organizations, locations, and events.
-Include roles, relationships, and dates as attributes where present.`,
-    custom: ``,
-};
-
 // ─── Clinical Section Metadata ────────────────────────────────────────────────
 
 const CLIN_SECTIONS = [
@@ -96,15 +102,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initModeToggle() {
     const btns = document.querySelectorAll('.mode-btn');
+    const applyMode = (mode) => {
+        const safeMode = ['standard', 'clinical', 'structured'].includes(mode) ? mode : 'standard';
+        state.mode = safeMode;
+        localStorage.setItem('lx_mode', safeMode);
+    btns.forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === safeMode);
+    });
+        const appMain = $('appMain');
+        const clinicalMain = $('clinicalMain');
+        const structuredMain = $('structuredMain');
+        if (appMain) appMain.style.display = safeMode === 'standard' ? 'grid' : 'none';
+        if (clinicalMain) clinicalMain.style.display = safeMode === 'clinical' ? 'grid' : 'none';
+        if (structuredMain) structuredMain.style.display = safeMode === 'structured' ? 'grid' : 'none';
+    };
+
+    const savedMode = localStorage.getItem('lx_mode');
+    if (savedMode) {
+        applyMode(savedMode);
+    } else {
+        applyMode(state.mode);
+    }
+
     btns.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
             if (mode === state.mode) return;
-            state.mode = mode;
-            btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-            $('appMain').style.display = mode === 'standard' ? 'grid' : 'none';
-            $('clinicalMain').style.display = mode === 'clinical' ? 'grid' : 'none';
-            $('structuredMain').style.display = mode === 'structured' ? 'grid' : 'none';
+            applyMode(mode);
         });
     });
 }
@@ -251,7 +275,9 @@ function initConfig() {
 
     // Change provider buttons
     const switchToStandard = () => {
-        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.mode-tab').forEach(t => {
+            t.classList.remove('active');
+        });
         const stdTab = document.querySelector('.mode-tab[data-mode="standard"]');
         if (stdTab) stdTab.classList.add('active');
         $('standardMain').style.display = 'flex';
@@ -267,7 +293,8 @@ function initConfig() {
 
     const structInput = $('structInputText');
     if (structInput) {
-        structInput.addEventListener('input', () => updateTextStats(structInput.value, 'structWordCount', 'structCharCount', null, 'structTokenCount', 'structCostEst', 'structured'));
+        const debouncedStructStats = debounce((val) => updateTextStats(val, 'structWordCount', 'structCharCount', null, 'structTokenCount', 'structCostEst', 'structured'));
+        structInput.addEventListener('input', () => debouncedStructStats(structInput.value));
     }
 }
 
@@ -358,7 +385,9 @@ function initStandardMode() {
     // Prompt templates
     document.querySelectorAll('.template-chip').forEach(chip => {
         chip.addEventListener('click', () => {
-            document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.template-chip').forEach(c => {
+                c.classList.remove('active');
+            });
             chip.classList.add('active');
             state.currentTemplate = chip.dataset.template;
             if (state.currentTemplate !== 'custom') {
@@ -370,7 +399,9 @@ function initStandardMode() {
     // Model buttons
     document.querySelectorAll('[data-model]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-model]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('[data-model]').forEach(b => {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
             state.selectedModel = btn.dataset.model;
             $('modelHint').textContent = state.selectedModel;
@@ -381,8 +412,9 @@ function initStandardMode() {
     registerEvent('toggleApiKey', 'click', () => toggleSecret('apiKey', 'eyeOpen', 'eyeClosed'));
 
     // Char counter
+    const debouncedStdStats = debounce((val) => updateTextStats(val, null, 'charCount', null, 'tokenCount', 'estCost', 'standard'));
     registerEvent('inputText', 'input', e => {
-        updateTextStats(e.target.value, null, 'charCount', null, 'tokenCount', 'estCost', 'standard');
+        debouncedStdStats(e.target.value);
     });
 
     // Add example
@@ -641,7 +673,9 @@ function initClinicalMode() {
     // Model selection
     document.querySelectorAll('[data-clin-model]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-clin-model]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('[data-clin-model]').forEach(b => {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
             state.clinicalModel = btn.dataset.clinModel;
             $('clinModelHint').textContent = state.clinicalModel;
@@ -649,12 +683,15 @@ function initClinicalMode() {
     });
 
     // Char counter
+    const debouncedClinStats = debounce((val) => updateTextStats(val, 'clinWordCount', 'clinCharCount', 'clinLineCount', 'clinTokenCount', 'clinCostEst', 'clinical'));
     registerEvent('clinicalNoteText', 'input', e => {
-        updateTextStats(e.target.value, 'clinWordCount', 'clinCharCount', 'clinLineCount', 'clinTokenCount', 'clinCostEst', 'clinical');
+        debouncedClinStats(e.target.value);
     });
 
     // Extract button
     registerEvent('clinicalExtractBtn', 'click', runClinicalExtraction);
+
+    registerEvent('clinCopySummaryBtn', 'click', copyClinicalSummary);
 
     // Keyboard shortcut
     document.addEventListener('keydown', e => {
@@ -716,8 +753,17 @@ async function runClinicalExtraction() {
     const apiKey = getActiveKey();
     if (!apiKey) { showToast(`Please enter your ${state.provider.toUpperCase()} API key`, 'error'); return; }
 
-    const noteText = $('clinicalNoteText')?.value?.trim();
-    if (!noteText) { showToast('Please paste an EMR note first', 'error'); return; }
+    const noteEl = $('clinicalNoteText');
+    const rawNote = noteEl?.value ?? '';
+    const cleanedNote = rawNote
+        .replace(/\r\n/g, '\n')
+        .replace(/[\t ]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    if (noteEl && cleanedNote !== rawNote) {
+        noteEl.value = cleanedNote;
+    }
+    if (!cleanedNote) { showToast('Please paste an EMR note first', 'error'); return; }
 
     if (currentStreamController) {
         currentStreamController.abort();
@@ -732,11 +778,11 @@ async function runClinicalExtraction() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                note_text: noteText,
+                note_text: cleanedNote,
                 model_id: state.clinicalModel,
                 api_key: apiKey,
                 provider: state.provider,
-            }),
+                }),
             signal: currentStreamController.signal
         });
 
@@ -1342,6 +1388,17 @@ async function runStructuredExtraction() {
         return;
     }
 
+    const allowedTypes = new Set(['string', 'number', 'boolean', 'array', 'object']);
+    const hasEmptyName = state.schemaFields.some(f => !String(f.name || '').trim());
+    if (hasEmptyName) {
+        showToast('All schema fields need a name', 'error');
+        return;
+    }
+    state.schemaFields = state.schemaFields.map(f => ({
+        ...f,
+        type: allowedTypes.has(f.type) ? f.type : 'string'
+    }));
+
     if (state.structuredBatchMode) {
         return runStructuredBatchExtraction();
     }
@@ -1784,7 +1841,9 @@ function promptsRender() {
                     promptModalClose();
 
                     // Clear the active template chip since we loaded from library
-                    document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('active'));
+                    document.querySelectorAll('.template-chip').forEach(c => {
+                        c.classList.remove('active');
+                    });
                     state.currentTemplate = 'custom';
                 }
             }

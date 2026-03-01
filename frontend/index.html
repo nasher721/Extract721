@@ -21,7 +21,7 @@
   <header class="app-header">
     <div class="header-left">
       <div class="logo-mark">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg aria-hidden="true" focusable="false" $$$>
           <rect width="28" height="28" rx="8" fill="url(#logoGrad)" />
           <path d="M7 9h14M7 14h10M7 19h6" stroke="white" stroke-width="2" stroke-linecap="round" />
           <circle cx="21" cy="19" r="3" fill="white" opacity="0.9" />
@@ -41,21 +41,21 @@
     <div class="header-right">
       <!-- Mode Toggle -->
       <div class="mode-toggle" id="modeToggle">
-        <button class="mode-btn active" id="modeStandard" data-mode="standard">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" $$$>
+          <svg aria-hidden="true" focusable="false" $$$>
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
           </svg>
           Standard
         </button>
-        <button class="mode-btn" id="modeClinical" data-mode="clinical">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" $$$>
+          <svg aria-hidden="true" focusable="false" $$$>
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
           Clinical
         </button>
-        <button class="mode-btn" id="modeStructured" data-mode="structured">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" $$$>
+          <svg aria-hidden="true" focusable="false" $$$>
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
             <line x1="3" y1="9" x2="21" y2="9" />
             <line x1="9" y1="21" x2="9" y2="9" />
@@ -69,7 +69,7 @@
       </div>
       <a href="https://github.com/google/langextract" target="_blank" rel="noopener noreferrer" class="github-link"
         title="View on GitHub">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <svg aria-hidden="true" focusable="false" $$$>
           <path
             d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.64.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33s1.7.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.41-.01 2.74 0 .27.18.58.69.48A10.02 10.02 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
         </svg>
@@ -86,7 +86,7 @@
       <div class="panel-header">
         <div class="panel-header-icon config-icon">⚙️</div>
         <h2 class="panel-title">Configuration</h2>
-        <button class="panel-collapse-btn" id="collapseConfig" title="Collapse panel">‹</button>
+        <button type="button" $$$>‹</button>
       </div>
       <div class="panel-body">
 
@@ -99,16 +99,16 @@
 
           <!-- Provider tabs -->
           <div class="provider-tabs" id="providerTabs">
-            <button class="provider-tab active" data-provider="gemini">
+            <button type="button" $$$>
               <span class="provider-logo">✦</span> Gemini
             </button>
-            <button class="provider-tab" data-provider="openai">
+            <button type="button" $$$>
               <span class="provider-logo">⊕</span> OpenAI
             </button>
-            <button class="provider-tab" data-provider="claude">
+            <button type="button" $$$>
               <span class="provider-logo">◇</span> Claude
             </button>
-            <button class="provider-tab" data-provider="glm">
+            <button type="button" $$$>
               <span class="provider-logo">⊗</span> GLM
             </button>
           </div>
@@ -119,14 +119,12 @@
               <div class="input-wrapper secret">
                 <input type="password" id="apiKey-gemini" class="form-input" placeholder="AIza… (Gemini API key)"
                   autocomplete="off" />
-                <button class="input-toggle-btn" data-toggle="apiKey-gemini" title="Show/hide">
-                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
+                <button type="button" $$$>
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" style="display:none">
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path
                       d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
@@ -140,14 +138,12 @@
               <div class="input-wrapper secret">
                 <input type="password" id="apiKey-openai" class="form-input" placeholder="sk-… (OpenAI API key)"
                   autocomplete="off" />
-                <button class="input-toggle-btn" data-toggle="apiKey-openai" title="Show/hide">
-                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
+                <button type="button" $$$>
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" style="display:none">
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path
                       d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
@@ -161,14 +157,12 @@
               <div class="input-wrapper secret">
                 <input type="password" id="apiKey-claude" class="form-input" placeholder="sk-ant-… (Anthropic key)"
                   autocomplete="off" />
-                <button class="input-toggle-btn" data-toggle="apiKey-claude" title="Show/hide">
-                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
+                <button type="button" $$$>
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" style="display:none">
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path
                       d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
@@ -182,14 +176,12 @@
               <div class="input-wrapper secret">
                 <input type="password" id="apiKey-glm" class="form-input" placeholder="ZhipuAI API key"
                   autocomplete="off" />
-                <button class="input-toggle-btn" data-toggle="apiKey-glm" title="Show/hide">
-                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
+                <button type="button" $$$>
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" style="display:none">
+                  <svg aria-hidden="true" focusable="false" $$$>
                     <path
                       d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
@@ -242,15 +234,15 @@
             <h3 class="section-label" style="margin:0;">
               <span class="section-icon">📝</span> Prompt Description
             </h3>
-            <button id="openPromptLibraryBtn" class="btn-secondary btn-sm" style="padding:4px 8px;">
+            <button type="button" $$$>
               📚 Library
             </button>
           </div>
           <div class="prompt-templates-row" style="margin-top:8px;">
-            <button class="template-chip active" data-template="literary">Literary</button>
-            <button class="template-chip" data-template="medical">Medical</button>
-            <button class="template-chip" data-template="news">News</button>
-            <button class="template-chip" data-template="custom">Custom</button>
+            <button type="button" $$$>Literary</button>
+            <button type="button" $$$>Medical</button>
+            <button type="button" $$$>News</button>
+            <button type="button" $$$>Custom</button>
           </div>
           <textarea id="promptDescription" class="form-textarea" rows="5" placeholder="Describe what to extract…">Extract characters, emotions, and relationships in order of appearance.
 Use exact text for extractions. Do not paraphrase or overlap entities.
@@ -293,8 +285,8 @@ Provide meaningful attributes for each entity to add context.</textarea>
           <!-- Example cards injected by JS -->
         </div>
 
-        <button class="btn-secondary add-example-btn" id="addExampleBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <button type="button" $$$>
+          <svg aria-hidden="true" focusable="false" $$$>
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -303,9 +295,9 @@ Provide meaningful attributes for each entity to add context.</textarea>
 
         <!-- Extract Button -->
         <div class="extract-footer">
-          <button class="btn-extract" id="extractBtn">
+          <button type="button" $$$>
             <span class="extract-btn-content">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg aria-hidden="true" focusable="false" $$$>
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               Run Extraction
@@ -327,8 +319,8 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <div class="panel-header-icon results-icon">✨</div>
         <h2 class="panel-title">Results</h2>
         <div class="results-tabs" id="resultsTabs" style="display:none;">
-          <button class="results-tab active" data-tab="viz" id="tabViz">Visualization</button>
-          <button class="results-tab" data-tab="json" id="tabJson">JSON</button>
+          <button type="button" $$$>Visualization</button>
+          <button type="button" $$$>JSON</button>
         </div>
       </div>
       <div class="panel-body results-body">
@@ -336,7 +328,7 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <!-- Empty State -->
         <div class="empty-state" id="emptyState">
           <div class="empty-illustration">
-            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg aria-hidden="true" focusable="false" $$$>
               <rect x="10" y="14" width="52" height="44" rx="6" fill="#1e1e2e" stroke="#3b3b55" stroke-width="2" />
               <rect x="18" y="22" width="28" height="3" rx="1.5" fill="#6366f1" opacity="0.6" />
               <rect x="18" y="30" width="36" height="2" rx="1" fill="#4b4b6b" />
@@ -363,8 +355,7 @@ Provide meaningful attributes for each entity to add context.</textarea>
           <div class="error-icon">⚠️</div>
           <h3 class="error-title">Extraction failed</h3>
           <p class="error-msg" id="errorMsg">An unknown error occurred.</p>
-          <button class="btn-secondary mt-2"
-            onclick="document.getElementById('errorState').style.display='none'; document.getElementById('emptyState').style.display='flex';">Dismiss</button>
+          <button type="button" $$$>Dismiss</button>
         </div>
 
         <!-- Visualization Tab -->
@@ -377,8 +368,8 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <div id="tabJsonContent" class="tab-content" style="display:none;">
           <div class="json-toolbar">
             <span class="json-label">Raw Extraction Result</span>
-            <button class="btn-copy" id="copyJsonBtn" title="Copy JSON">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button type="button" $$$>
+              <svg aria-hidden="true" focusable="false" $$$>
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
@@ -415,7 +406,7 @@ Provide meaningful attributes for each entity to add context.</textarea>
               <div class="pab-name" id="clinProviderName">Gemini</div>
               <div class="pab-model" id="clinProviderModel">gemini-2.5-flash</div>
             </div>
-            <button class="pab-change" id="clinChangeProviderBtn" title="Change provider">⚙︎</button>
+            <button type="button" $$$>⚙︎</button>
           </div>
         </section>
 
@@ -445,8 +436,8 @@ Provide meaningful attributes for each entity to add context.</textarea>
         <!-- History shortcut -->
         <section class="config-section">
           <h3 class="section-label"><span class="section-icon">🕐</span> Recent Extractions</h3>
-          <button class="btn-secondary" id="openHistoryBtn" style="width:100%">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button type="button" $$$>
+            <svg aria-hidden="true" focusable="false" $$$>
               <polyline points="1 4 1 10 7 10" />
               <path d="M3.51 15a9 9 0 1 0 .49-3.74" />
             </svg>
@@ -466,7 +457,7 @@ Provide meaningful attributes for each entity to add context.</textarea>
       <div class="panel-body clinical-input-body">
         <!-- File drop zone -->
         <div id="clinFileDropZone" class="file-drop-zone">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg aria-hidden="true" focusable="false" $$$>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
@@ -482,9 +473,9 @@ Provide meaningful attributes for each entity to add context.</textarea>
           placeholder="Paste the raw EMR note here, or drop a file above…
 The AI will strip administrative clutter and return a structured clinical JSON with HPI, PMH, vitals, labs, imaging, plan, and more."></textarea>
         <div class="extract-footer">
-          <button class="btn-extract" id="clinicalExtractBtn">
+          <button type="button" $$$>
             <span class="extract-btn-content" id="clinExtractContent">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg aria-hidden="true" focusable="false" $$$>
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
               Clean &amp; Extract
@@ -501,26 +492,32 @@ The AI will strip administrative clutter and return a structured clinical JSON w
 
     <!-- Clinical Results -->
     <section class="panel panel-results" id="clinicalResultsPanel">
-      <div class="panel-header">
-        <div class="panel-header-icon results-icon">✨</div>
-        <h2 class="panel-title">Structured Clinical Data</h2>
-        <div class="results-tabs" id="clinResultsTabs" style="display:none;">
-          <button class="results-tab active" data-clin-tab="cards" id="clinTabCards">Cards</button>
-          <button class="results-tab" data-clin-tab="json" id="clinTabJson">JSON</button>
-          <button class="btn-copy" id="clinCopyHistoriesBtn"
-            style="margin-left: auto; padding: 4px 10px; font-size: 12px; gap: 6px; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            Copy Histories
+        <div class="panel-header">
+          <div class="panel-header-icon results-icon">✨</div>
+          <h2 class="panel-title">Structured Clinical Data</h2>
+          <div class="results-tabs" id="clinResultsTabs" style="display:none;">
+            <button type="button" $$$>Cards</button>
+            <button type="button" $$$>JSON</button>
+            <button type="button" $$$>
+              <svg aria-hidden="true" focusable="false" $$$>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l6 6v10a2 2 0 0 1-2 2z" />
+                <polyline points="14 3 14 8 19 8" />
+              </svg>
+              Copy Summary
+            </button>
+            <button type="button" $$$>
+              <svg aria-hidden="true" focusable="false" $$$>
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copy Histories
           </button>
         </div>
       </div>
       <div class="panel-body results-body">
         <div class="empty-state" id="clinEmptyState">
           <div class="empty-illustration">
-            <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+            <svg aria-hidden="true" focusable="false" $$$>
               <rect x="10" y="8" width="52" height="56" rx="6" fill="#1e1e2e" stroke="#3b3b55" stroke-width="2" />
               <path d="M22 22h12M22 30h28M22 38h24M22 46h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round"
                 opacity="0.7" />
@@ -550,8 +547,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <div id="clinTabJsonContent" class="tab-content" style="display:none;">
           <div class="json-toolbar">
             <span class="json-label">Structured JSON Output</span>
-            <button class="btn-copy" id="clinCopyJsonBtn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button type="button" $$$>
+              <svg aria-hidden="true" focusable="false" $$$>
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
@@ -584,7 +581,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
               <div class="pab-name" id="structProviderName">Gemini</div>
               <div class="pab-model" id="structProviderModel">gemini-2.5-flash</div>
             </div>
-            <button class="pab-change" id="structChangeProviderBtn" title="Change provider">⚙︎</button>
+            <button type="button" $$$>⚙︎</button>
           </div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Provider &amp; key set in Standard mode
             config.</p>
@@ -599,8 +596,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
           <!-- Dynamically injected fields go here -->
         </div>
 
-        <button class="btn-secondary add-example-btn" id="structAddFieldBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <button type="button" $$$>
+          <svg aria-hidden="true" focusable="false" $$$>
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -618,9 +615,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
           <h2 class="panel-title">Document Input</h2>
         </div>
         <div class="mode-toggle" style="margin:0; padding:2px;">
-          <button class="mode-btn active" id="structInputModeSingleBtn"
-            style="padding: 4px 12px; font-size: 0.85rem;">Single</button>
-          <button class="mode-btn" id="structInputModeBatchBtn" style="padding: 4px 12px; font-size: 0.85rem;">Batch
+          <button type="button" $$$>Single</button>
+          <button type="button" $$$>Batch
             ⚡️</button>
         </div>
       </div>
@@ -644,7 +640,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <div id="structBatchInputView" style="display: none; flex-direction:column; flex:1;">
           <div class="file-drop-zone" id="structBatchDropZone" style="margin-bottom: 12px;">
             <div class="file-drop-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg aria-hidden="true" focusable="false" $$$>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -653,8 +649,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
             <h3>Drag & Drop files here</h3>
             <p>Supports .txt, .pdf, .docx, .md</p>
             <input type="file" id="structBatchFileInput" multiple accept=".txt,.pdf,.docx,.md" style="display:none;">
-            <button class="btn-secondary btn-sm" onclick="document.getElementById('structBatchFileInput').click()"
-              style="margin-top: 8px;">Browse Files</button>
+            <button type="button" $$$>Browse Files</button>
           </div>
 
           <div class="batch-list-container"
@@ -680,15 +675,14 @@ The AI will strip administrative clutter and return a structured clinical JSON w
           <div class="struct-input-stats" id="structBatchStats"
             style="display: none; justify-content: space-between; margin-top: 8px;">
             <span><span id="structBatchCount">0</span> files queued</span>
-            <button class="btn-secondary btn-sm" id="structBatchClearBtn"
-              style="padding: 2px 8px; font-size: 0.75rem;">Clear All</button>
+            <button type="button" $$$>Clear All</button>
           </div>
         </div>
 
         <div class="extract-footer" style="margin-top:20px;">
-          <button class="btn-extract" id="structExtractBtn">
+          <button type="button" $$$>
             <span class="extract-btn-content" id="structExtractBtnContent">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg aria-hidden="true" focusable="false" $$$>
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               Extract Structured JSON
@@ -708,15 +702,15 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <div class="panel-header-icon results-icon">✨</div>
         <h2 class="panel-title">Extracted JSON</h2>
         <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-          <button class="btn-copy" id="structCsvBtn" style="display:none;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button type="button" $$$>
+            <svg aria-hidden="true" focusable="false" $$$>
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             CSV
           </button>
-          <button class="btn-copy" id="structCopyJsonBtn" style="display:none;">Copy</button>
+          <button type="button" $$$>Copy</button>
         </div>
       </div>
       <div class="panel-body results-body" style="background:#11111b; border-radius: 6px;">
@@ -743,8 +737,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       <div class="modal-header">
         <h2>&#x1F550; Extraction History</h2>
         <div class="modal-header-actions">
-          <button class="btn-secondary btn-sm" id="clearHistoryBtn">Clear All</button>
-          <button class="btn-icon" id="closeHistoryBtn" title="Close">&times;</button>
+          <button type="button" $$$>Clear All</button>
+          <button type="button" $$$>&times;</button>
         </div>
       </div>
       <div id="historyList" class="history-list">
@@ -759,7 +753,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       <div class="modal-header">
         <h2>📚 Prompt Library</h2>
         <div class="modal-header-actions">
-          <button class="btn-icon" id="closePromptBtn" title="Close">&times;</button>
+          <button type="button" $$$>&times;</button>
         </div>
       </div>
 
@@ -767,7 +761,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
           <input type="text" id="newPromptName" class="form-input" style="flex: 1;"
             placeholder="Save current prompt as...">
-          <button id="savePromptBtn" class="btn-primary" style="padding: 8px 16px;">Save</button>
+          <button type="button" $$$>Save</button>
         </div>
 
         <div id="promptList" class="history-list" style="max-height: 400px; padding: 0; background: transparent;">
@@ -777,8 +771,8 @@ The AI will strip administrative clutter and return a structured clinical JSON w
 
       <div class="modal-footer"
         style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px;">
-        <button id="exportPromptsBtn" class="btn-secondary btn-sm">Export JSON</button>
-        <button id="importPromptsBtn" class="btn-secondary btn-sm">Import JSON</button>
+        <button type="button" $$$>Export JSON</button>
+        <button type="button" $$$>Import JSON</button>
         <input type="file" id="importPromptsFile" style="display: none;" accept=".json">
       </div>
     </div>
