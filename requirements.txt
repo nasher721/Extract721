@@ -24,4 +24,3 @@ regex>=2023.0.0
 requests>=2.25.0
 tqdm>=4.64.0
 typing-extensions>=4.0.0
-.
