@@ -67,9 +67,10 @@ function initModeToggle() {
             state.mode = mode;
             btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
 
-            $('appMain').style.display = mode === 'standard' ? 'grid' : 'none';
-            $('clinicalMain').style.display = mode === 'clinical' ? 'grid' : 'none';
-            $('structuredMain').style.display = mode === 'structured' ? 'grid' : 'none';
+            // Toggle visibility using u-hidden class (style.display is overridden by !important)
+            $('appMain').classList.toggle('u-hidden', mode !== 'standard');
+            $('clinicalMain').classList.toggle('u-hidden', mode !== 'clinical');
+            $('structuredMain').classList.toggle('u-hidden', mode !== 'structured');
         });
     });
 }
