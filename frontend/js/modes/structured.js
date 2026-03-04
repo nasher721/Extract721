@@ -1,4 +1,4 @@
-import { state } from '../state.js';
+import { state, persistSchemaFields } from '../state.js';
 import { $, escHtml, showToast, registerEvent, apiClient, setStatus, updateTextStats, uniqueId } from '../utils.js';
 import { SCHEMA_TEMPLATES } from '../constants.js';
 import { historyAdd } from '../history.js';
@@ -14,6 +14,7 @@ export function initStructuredMode() {
             description: ''
         });
         renderSchemaFields();
+        persistSchemaFields();
     });
 
     registerEvent('structExtractBtn', 'click', runStructuredExtraction);
@@ -26,8 +27,8 @@ export function initStructuredMode() {
         state.structModel = e.target.value;
     });
 
-    // Template selection
-    document.querySelectorAll('.schema-template-chip').forEach(chip => {
+    // Template selection (chips in Schema Builder panel)
+    document.querySelectorAll('.schema-template-chip[data-template]').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.schema-template-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
@@ -36,6 +37,7 @@ export function initStructuredMode() {
             if (template) {
                 state.schemaFields = template.map((f) => ({ ...f, id: uniqueId('sf') }));
                 renderSchemaFields();
+                persistSchemaFields();
                 showToast(`Applied ${templateKey} template`, 'success');
             }
         });
@@ -107,17 +109,19 @@ export function renderSchemaFields() {
 
     container.querySelectorAll('.remove-field-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id);
-            state.schemaFields = state.schemaFields.filter(f => f.id !== id);
+            const id = e.target.dataset.id;
+            state.schemaFields = state.schemaFields.filter(f => String(f.id) !== String(id));
             renderSchemaFields();
+            persistSchemaFields();
         });
     });
 }
 
 function updateField(id, updates) {
-    const field = state.schemaFields.find(f => f.id === parseInt(id));
+    const field = state.schemaFields.find(f => String(f.id) === String(id));
     if (field) {
         Object.assign(field, updates);
+        persistSchemaFields();
     }
 }
 

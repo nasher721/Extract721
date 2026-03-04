@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initModeToggle();
     initHistory();
     initPromptLibrary();
+    initHelp();
+    initClinicalSchema();
     initStandardMode();
     initClinicalMode();
     initClinicalFileUpload();
@@ -20,6 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial UI state
     switchProvider(state.provider);
 });
+
+async function initClinicalSchema() {
+    try {
+        const res = await fetch('/api/clinical-schema');
+        if (res.ok) {
+            const data = await res.json();
+            state.clinSections = data.sections;
+        }
+    } catch (_) {}
+}
+
+function initHelp() {
+    const helpLink = $('helpLink');
+    const helpModal = $('helpModal');
+    const closeBtn = $('closeHelpBtn');
+    if (!helpLink || !helpModal) return;
+    helpLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        helpModal.classList.add('open');
+    });
+    closeBtn?.addEventListener('click', () => {
+        helpModal.classList.remove('open');
+        try { localStorage.setItem('langextract_help_seen', '1'); } catch (_) {}
+    });
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.classList.remove('open');
+            try { localStorage.setItem('langextract_help_seen', '1'); } catch (_) {}
+        }
+    });
+    // First-time onboarding: show help modal
+    if (!localStorage.getItem('langextract_help_seen')) {
+        setTimeout(() => helpModal.classList.add('open'), 500);
+    }
+}
 
 function initModeToggle() {
     const btns = document.querySelectorAll('.mode-btn');

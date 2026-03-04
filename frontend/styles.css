@@ -2121,6 +2121,7 @@ select.form-input {
     white-space: nowrap;
 }
 
+.history-item-edit,
 .history-item-delete {
     background: transparent;
     border: none;
@@ -2133,9 +2134,24 @@ select.form-input {
     flex-shrink: 0;
 }
 
+.history-item-edit:hover {
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
 .history-item-delete:hover {
     color: var(--accent-rose);
     background: rgba(244, 63, 94, 0.1);
+}
+
+.help-list .help-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.help-list .help-item:last-child {
+    border-bottom: none;
 }
 
 /* Schema Template Picker */
@@ -2144,6 +2160,35 @@ select.form-input {
     align-items: center;
     gap: 8px;
     margin-bottom: 6px;
+}
+
+.schema-template-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.schema-template-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.schema-template-chip:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.schema-template-chip.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
 }
 
 .schema-template-label {

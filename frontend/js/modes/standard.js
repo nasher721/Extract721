@@ -1,27 +1,30 @@
-import { state } from '../state.js';
+import { state, persistExamples } from '../state.js';
 import { $, escHtml, showToast, registerEvent, apiClient, updateTextStats, setStatus } from '../utils.js';
 import { TEMPLATES } from '../constants.js';
 import { historyAdd } from '../history.js';
 
 export function initStandardMode() {
     // Default example
-    state.examples = [
-        {
-            text: 'Lady Juliet gazed longingly at the stars, her heart aching for Romeo, whose absence filled her with a deep and melancholic yearning.',
-            extractions: [
-                {
-                    extraction_class: 'Character',
-                    extraction_text: 'Lady Juliet',
-                    attributes: { gender: 'Female', emotion: 'Longing' },
-                },
-                {
-                    extraction_class: 'Character',
-                    extraction_text: 'Romeo',
-                    attributes: { gender: 'Male', relationship: 'Absent lover' },
-                },
-            ],
-        },
-    ];
+    if (state.examples.length === 0) {
+        state.examples = [
+            {
+                text: 'Lady Juliet gazed longingly at the stars, her heart aching for Romeo, whose absence filled her with a deep and melancholic yearning.',
+                extractions: [
+                    {
+                        extraction_class: 'Character',
+                        extraction_text: 'Lady Juliet',
+                        attributes: { gender: 'Female', emotion: 'Longing' },
+                    },
+                    {
+                        extraction_class: 'Character',
+                        extraction_text: 'Romeo',
+                        attributes: { gender: 'Male', relationship: 'Absent lover' },
+                    },
+                ],
+            },
+        ];
+        persistExamples();
+    }
 
     renderExamples();
     updateExamplesCount();
@@ -87,12 +90,14 @@ export function addExample() {
     state.examples.push({ text: '', extractions: [] });
     renderExamples();
     updateExamplesCount();
+    persistExamples();
 }
 
 export function removeExample(idx) {
     state.examples.splice(idx, 1);
     renderExamples();
     updateExamplesCount();
+    persistExamples();
 }
 
 export function addExtraction(exIdx) {
@@ -102,11 +107,13 @@ export function addExtraction(exIdx) {
         attributes: {},
     });
     renderExamples();
+    persistExamples();
 }
 
 export function removeExtraction(exIdx, extIdx) {
     state.examples[exIdx].extractions.splice(extIdx, 1);
     renderExamples();
+    persistExamples();
 }
 
 export function addAttribute(exIdx, extIdx) {
@@ -119,6 +126,7 @@ export function addAttribute(exIdx, extIdx) {
 export function removeAttribute(exIdx, extIdx, attrKey) {
     delete state.examples[exIdx].extractions[extIdx].attributes[attrKey];
     renderExamples();
+    persistExamples();
 }
 
 export function renderExamples() {
@@ -229,6 +237,7 @@ export async function runExtraction() {
         displayResults(data);
         setStatus('ready', 'Done');
         showToast('Extraction complete!', 'success');
+        persistExamples();
 
         // Add to history
         historyAdd({

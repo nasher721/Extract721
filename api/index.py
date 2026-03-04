@@ -84,6 +84,13 @@ app.add_middleware(
 async def get_providers():
     return {"providers": PROVIDER_MODELS}
 
+
+@app.get("/api/clinical-schema")
+async def get_clinical_schema():
+    """Return clinical section schema (single source of truth for prompt and frontend)."""
+    from clinical_schema import CLINICAL_SECTIONS
+    return {"sections": CLINICAL_SECTIONS}
+
 # ─── Standard LangExtract Endpoint ────────────────────────────────────────────
 
 @app.post("/api/extract")

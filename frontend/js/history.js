@@ -35,7 +35,10 @@ export function historyRender() {
                     ${item.model} · ${timeSince(item.timestamp)}
                 </div>
             </div>
-            <button class="history-item-delete" onclick="historyItemDelete(event, ${item.id})" title="Delete">✕</button>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <button class="history-item-edit" onclick="historyItemEdit(event, ${item.id})" title="Edit title">✎</button>
+                <button class="history-item-delete" onclick="historyItemDelete(event, ${item.id})" title="Delete">✕</button>
+            </div>
         </div>
     `).join('');
 }
@@ -47,6 +50,20 @@ window.historyItemDelete = (e, id) => {
     history = history.filter(item => item.id !== id);
     historySave(history);
     historyRender();
+};
+
+window.historyItemEdit = (e, id) => {
+    e.stopPropagation();
+    const history = historyLoad();
+    const item = history.find(i => i.id === id);
+    if (!item) return;
+    const newTitle = prompt('Edit title:', item.title || 'Extraction');
+    if (newTitle !== null && newTitle.trim()) {
+        item.title = newTitle.trim();
+        historySave(history);
+        historyRender();
+        showToast('Title updated', 'success');
+    }
 };
 
 window.historyItemClick = (id) => {

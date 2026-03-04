@@ -1,3 +1,7 @@
+from clinical_schema import get_prompt_json_template
+
+_CLINICAL_JSON_TEMPLATE = get_prompt_json_template()
+
 CLINICAL_PROMPT_TEMPLATE = """You are a clinical document cleaning and structured extraction engine.
 
 PRIMARY GOAL:
@@ -76,28 +80,11 @@ OUTPUT RULES
 
 Return ONLY valid JSON in exactly this format, nothing else:
 
-{{
-  "history": null,
-  "past_medical_history": null,
-  "past_surgical_history": null,
-  "family_history": null,
-  "social_history": null,
-  "allergies": null,
-  "current_medications": null,
-  "vitals": null,
-  "exam": null,
-  "neurologic_exam": null,
-  "labs": null,
-  "imaging": null,
-  "active_problems": null,
-  "assessment_impression": null,
-  "plan": null,
-  "orders": null
-}}
+{json_template}
 
 --------------------------------------------------
 TEXT TO PROCESS:
 --------------------------------------------------
 
 {note_text}
-"""
+""".replace("{json_template}", _CLINICAL_JSON_TEMPLATE)

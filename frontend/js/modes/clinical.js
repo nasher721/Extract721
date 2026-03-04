@@ -1,6 +1,10 @@
 import { state } from '../state.js';
 import { $, escHtml, showToast, registerEvent, updateTextStats, setStatus, toggleSecret } from '../utils.js';
 import { CLIN_SECTIONS } from '../constants.js';
+
+function getClinSections() {
+    return state.clinSections || CLIN_SECTIONS;
+}
 import { historyAdd } from '../history.js';
 
 export function initClinicalMode() {
@@ -39,6 +43,19 @@ export function initClinicalMode() {
 }
 
 let currentStreamController = null;
+
+/** Parse JSON from streamed LLM output, stripping markdown fences if present. */
+function parseStreamedJson(raw) {
+    if (!raw || !raw.trim()) return null;
+    let clean = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (match) clean = match[0];
+    try {
+        return JSON.parse(clean);
+    } catch {
+        return null;
+    }
+}
 
 export async function runClinicalExtraction() {
     const apiKey = state.apiKeys[state.provider];
@@ -129,23 +146,18 @@ export async function runClinicalExtraction() {
 
         // Final result processing
         try {
-            // After stream ends, re-fetch full or parse raw
-            // In this specific implementation, we might just re-call non-stream for final structure if needed,
-            // but let's assume rawOutput is the full JSON or we call a separate finish endpoint.
-            // For now, let's just parse the rawOutput if it's finished.
-
-            // Actually, the original app probably just used the raw output.
-            // Let's call the non-streaming endpoint for the final "pretty" result for now if raw fails.
-
-            const finalData = await apiClient('/api/clinical-extract', {
-                note_text: noteText,
-                model_id: state.clinicalModel,
-                api_key: apiKey,
-                provider: state.provider
-            });
-
-            state.clinStructuredData = finalData.raw_result;
-            displayClinicalResults(finalData.raw_result);
+            let structured = parseStreamedJson(rawOutput);
+            if (!structured) {
+                const finalData = await apiClient('/api/clinical-extract', {
+                    note_text: noteText,
+                    model_id: state.clinicalModel,
+                    api_key: apiKey,
+                    provider: state.provider
+                });
+                structured = finalData.structured;
+            }
+            state.clinStructuredData = structured;
+            displayClinicalResults(structured);
             setStatus('ready', 'Done');
             showToast('Note processed successfully', 'success');
 
@@ -159,15 +171,11 @@ export async function runClinicalExtraction() {
 
         } catch (e) {
             console.error("Final processing failed", e);
-            // Fallback: try to grep some JSON from rawOutput
-            try {
-                const jsonMatch = rawOutput.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    state.clinStructuredData = parsed;
-                    displayClinicalResults(parsed);
-                }
-            } catch (inner) {
+            const parsed = parseStreamedJson(rawOutput);
+            if (parsed) {
+                state.clinStructuredData = parsed;
+                displayClinicalResults(parsed);
+            } else {
                 showError(e.message);
             }
         }
@@ -206,7 +214,7 @@ function displayClinicalResults(data) {
             </div>
             <div class="summary-stats">
                 <div class="stat-item">
-                    <div class="stat-value">${CLIN_SECTIONS.filter(s => data[s.key]).length}</div>
+                    <div class="stat-value">${getClinSections().filter(s => data[s.key]).length}</div>
                     <div class="stat-label">Sections Found</div>
                 </div>
                 <div class="stat-item">
@@ -222,7 +230,7 @@ function displayClinicalResults(data) {
     }
 
     // 2. Render Cards
-    CLIN_SECTIONS.forEach(sec => {
+    getClinSections().forEach(sec => {
         const val = data[sec.key];
         if (val === null || val === undefined || (Array.isArray(val) && val.length === 0)) return;
 

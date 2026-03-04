@@ -67,6 +67,14 @@
         <span class="status-dot"></span>
         <span class="status-text">Ready</span>
       </div>
+      <a href="#" id="helpLink" class="github-link" title="Help &amp; How it works" style="margin-right:4px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        Help
+      </a>
       <a href="https://github.com/google/langextract" target="_blank" rel="noopener noreferrer" class="github-link"
         title="View on GitHub">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -578,6 +586,20 @@ The AI will strip administrative clutter and return a structured clinical JSON w
       <div class="panel-body">
 
         <section class="config-section">
+          <h3 class="section-label"><span class="section-icon">📑</span> Schema Templates</h3>
+          <div class="schema-template-row">
+            <div class="schema-template-chips">
+              <button class="schema-template-chip" data-template="invoice">Invoice</button>
+              <button class="schema-template-chip" data-template="resume">Resume</button>
+              <button class="schema-template-chip" data-template="contract">Contract</button>
+              <button class="schema-template-chip" data-template="medical">Medical</button>
+              <button class="schema-template-chip" data-template="research">Research</button>
+              <button class="schema-template-chip" data-template="product">Product</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="config-section">
           <h3 class="section-label"><span class="section-icon">🤖</span> Active Provider</h3>
           <div class="provider-active-badge" id="structProviderBadge">
             <span class="pab-icon" id="structProviderIcon">G</span>
@@ -774,6 +796,29 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <button id="exportPromptsBtn" class="btn-secondary btn-sm">Export JSON</button>
         <button id="importPromptsBtn" class="btn-secondary btn-sm">Import JSON</button>
         <input type="file" id="importPromptsFile" class="u-hidden" accept=".json" title="Import prompts from JSON">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Help / What You Can Do Modal ────────────────────────────────────── -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-panel u-max-w-600">
+      <div class="modal-header">
+        <h2>❓ Help &amp; How it works</h2>
+        <div class="modal-header-actions">
+          <button class="btn-icon" id="closeHelpBtn" title="Close">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body u-p-xl">
+        <h3 class="u-fs-sm u-text-muted u-mb-md">What you can do</h3>
+        <ul class="help-list" style="list-style:none; padding:0; margin:0;">
+          <li class="help-item"><strong>Standard</strong> — Few-shot extraction: define a prompt, add examples with entities and attributes, extract from any text. Best for NER, relationships, custom schemas.</li>
+          <li class="help-item"><strong>Clinical</strong> — Paste raw EMR notes; AI strips clutter and returns structured JSON (HPI, vitals, labs, plan, etc.). Drop PDF/DOCX to import.</li>
+          <li class="help-item"><strong>Schema</strong> — Define custom fields (name, type, description), extract to JSON. Use templates (Invoice, Resume, etc.) or batch multiple texts.</li>
+        </ul>
+        <p class="u-mt-lg u-text-secondary">
+          <a href="https://github.com/google/langextract/blob/main/README.md" target="_blank" rel="noopener">View full documentation →</a>
+        </p>
       </div>
     </div>
   </div>

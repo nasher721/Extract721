@@ -24,6 +24,7 @@ export function promptsRender() {
             <div style="display:flex;align-items:center;gap:6px;">
                 ${item.readonly ? '<span class="history-item-badge">Built-in</span>' : ''}
                 <button class="btn-secondary btn-sm prompt-item-load" data-id="${item.id}">Load</button>
+                ${!item.readonly ? `<button class="btn-secondary btn-sm prompt-item-edit" data-id="${item.id}" title="Edit">Edit</button>` : ''}
                 ${!item.readonly ? `<button class="history-item-delete prompt-item-del" data-id="${item.id}" title="Delete">✕</button>` : ''}
             </div>
         </div>
@@ -49,6 +50,21 @@ export function promptsRender() {
         });
     });
 
+    // Edit
+    list.querySelectorAll('.prompt-item-edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = state.prompts.find(p => p.id === btn.dataset.id);
+            if (item) {
+                state.editingPromptId = item.id;
+                $('newPromptName').value = item.name;
+                $('promptDescription').value = item.prompt;
+                $('savePromptBtn').textContent = 'Update';
+                showToast('Editing: ' + item.name, 'info');
+            }
+        });
+    });
+
     // Delete
     list.querySelectorAll('.prompt-item-del').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -62,6 +78,9 @@ export function promptsRender() {
 }
 
 export function promptModalOpen() {
+    state.editingPromptId = null;
+    $('savePromptBtn').textContent = 'Save';
+    $('newPromptName').value = '';
     promptsRender();
     const modal = $('promptModal');
     if (modal) modal.classList.add('open');
@@ -91,17 +110,29 @@ export function initPromptLibrary() {
         if (!name) { showToast('Please enter a name to save.', 'error'); return; }
         if (!promptText) { showToast('Prompt description is empty.', 'error'); return; }
 
-        const newPrompt = {
-            id: 'p_' + Date.now(),
-            name: name,
-            prompt: promptText,
-            readonly: false
-        };
-
-        promptsSave([newPrompt, ...state.prompts]);
-        promptsRender();
-        nameInput.value = '';
-        showToast('Prompt saved to library!', 'success');
+        if (state.editingPromptId) {
+            const idx = state.prompts.findIndex(p => p.id === state.editingPromptId);
+            if (idx >= 0) {
+                state.prompts[idx] = { ...state.prompts[idx], name, prompt: promptText };
+                promptsSave(state.prompts);
+                promptsRender();
+                state.editingPromptId = null;
+                nameInput.value = '';
+                $('savePromptBtn').textContent = 'Save';
+                showToast('Prompt updated!', 'success');
+            }
+        } else {
+            const newPrompt = {
+                id: 'p_' + Date.now(),
+                name: name,
+                prompt: promptText,
+                readonly: false
+            };
+            promptsSave([newPrompt, ...state.prompts]);
+            promptsRender();
+            nameInput.value = '';
+            showToast('Prompt saved to library!', 'success');
+        }
     });
 
     registerEvent('exportPromptsBtn', 'click', () => {
