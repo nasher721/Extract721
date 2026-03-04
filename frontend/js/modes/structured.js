@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { $, escHtml, showToast, registerEvent, apiClient, setStatus, updateTextStats } from '../utils.js';
+import { $, escHtml, showToast, registerEvent, apiClient, setStatus, updateTextStats, uniqueId } from '../utils.js';
 import { SCHEMA_TEMPLATES } from '../constants.js';
 import { historyAdd } from '../history.js';
 
@@ -8,7 +8,7 @@ let _lastStructuredResult = null;
 export function initStructuredMode() {
     registerEvent('structAddFieldBtn', 'click', () => {
         state.schemaFields.push({
-            id: Date.now(),
+            id: uniqueId('sf'),
             name: '',
             type: 'string',
             description: ''
@@ -34,7 +34,7 @@ export function initStructuredMode() {
             const templateKey = chip.dataset.template;
             const template = SCHEMA_TEMPLATES[templateKey];
             if (template) {
-                state.schemaFields = template.map((f, i) => ({ ...f, id: Date.now() + i }));
+                state.schemaFields = template.map((f) => ({ ...f, id: uniqueId('sf') }));
                 renderSchemaFields();
                 showToast(`Applied ${templateKey} template`, 'success');
             }
@@ -174,7 +174,7 @@ async function handleStructBatchFiles(files) {
             const data = await resp.json();
 
             state.structuredBatchFiles.push({
-                id: 'bf_' + Date.now() + Math.random(),
+                id: uniqueId('bf'),
                 name: file.name,
                 size: file.size,
                 text: data.text
@@ -338,7 +338,7 @@ function showError(msg) {
 }
 
 function initCsvExport() {
-    registerEvent('exportCsvBtn', async () => {
+    registerEvent('exportCsvBtn', 'click', async () => {
         if (!_lastStructuredResult) {
             showToast('No data to export. Run extraction first.', 'error');
             return;
@@ -346,11 +346,11 @@ function initCsvExport() {
 
         showToast('Generating CSV…', 'info');
         try {
-            const data = Array.isArray(_lastStructuredResult) ? _lastStructuredResult : [_lastStructuredResult];
+            const rows = Array.isArray(_lastStructuredResult) ? _lastStructuredResult : [_lastStructuredResult];
             const resp = await fetch('/api/export-csv', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ rows, filename: 'langextract_export' })
             });
 
             if (!resp.ok) throw new Error('Failed to generate CSV');

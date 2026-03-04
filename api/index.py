@@ -5,7 +5,7 @@ import re
 import time
 import asyncio
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, FileResponse
@@ -30,14 +30,35 @@ from models import (
     BatchExtractItem, BatchExtractRequest, ExportCSVRequest, SchemaField
 )
 from prompts import CLINICAL_PROMPT_TEMPLATE
-from llm import PROVIDER_MODELS, call_llm_with_retry, clean_json_response
+from llm import (
+    PROVIDER_MODELS,
+    call_llm_with_retry,
+    clean_json_response,
+    resolve_api_key,
+    require_api_key,
+)
 from parsers import parse_upload_file
 
-# Resolve paths relative to this file so the server works from any CWD
-BASE_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BASE_DIR / "frontend"
-
 app = FastAPI()
+
+# ─── Rate Limiting ─────────────────────────────────────────────────────────────
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+_RATE_LIMIT = os.getenv("RATE_LIMIT_EXTRACT", "30/minute")
+
+
+def _get_key(provider: str, api_key) -> str:
+    """Resolve and validate API key; raises HTTPException if missing."""
+    key = resolve_api_key(provider, api_key.get_secret_value() if api_key else "")
+    require_api_key(provider, key)
+    return key
+
 
 # CORS: allow same-origin + localhost dev. Never wildcard with credentials.
 _ALLOWED_ORIGINS = os.getenv(
@@ -66,8 +87,10 @@ async def get_providers():
 # ─── Standard LangExtract Endpoint ────────────────────────────────────────────
 
 @app.post("/api/extract")
-async def extract_data(req: ExtractRequest):
+@limiter.limit(_RATE_LIMIT)
+async def extract_data(request: Request, req: ExtractRequest):
     try:
+        api_key = _get_key(req.provider, req.api_key)
         # LangExtract only supports Gemini natively; for other providers we
         # fall back to a direct LLM prompt that mimics extraction output.
         if req.provider == "gemini":
@@ -90,7 +113,7 @@ async def extract_data(req: ExtractRequest):
                 prompt_description=req.prompt,
                 examples=lx_examples,
                 model_id=req.model_id,
-                api_key=req.api_key.get_secret_value()
+                api_key=api_key,
             )
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -126,7 +149,7 @@ TEXT TO ANALYZE:
 Return ONLY valid JSON, no markdown fences."""
 
 
-            raw = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value(), json_mode=True)
+            raw = call_llm_with_retry(prompt, req.provider, req.model_id, api_key, json_mode=True)
             try:
                 parsed = json.loads(raw) if isinstance(raw, str) else raw
             except Exception:
@@ -145,10 +168,12 @@ Return ONLY valid JSON, no markdown fences."""
 # ─── Clinical EMR Extraction Endpoint ─────────────────────────────────────────
 
 @app.post("/api/clinical-extract")
-async def clinical_extract(req: ClinicalExtractRequest):
+@limiter.limit(_RATE_LIMIT)
+async def clinical_extract(request: Request, req: ClinicalExtractRequest):
     try:
+        api_key = _get_key(req.provider, req.api_key)
         prompt = CLINICAL_PROMPT_TEMPLATE.format(note_text=req.note_text)
-        raw_text = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value())
+        raw_text = call_llm_with_retry(prompt, req.provider, req.model_id, api_key)
 
         try:
             structured = clean_json_response(raw_text)
@@ -166,38 +191,58 @@ async def clinical_extract(req: ClinicalExtractRequest):
 
 
 @app.post("/api/clinical-extract-stream")
-async def clinical_extract_stream(req: ClinicalExtractRequest):
+@limiter.limit(_RATE_LIMIT)
+async def clinical_extract_stream(request: Request, req: ClinicalExtractRequest):
     """
     Streams response chunks as Server-Sent Events (SSE).
     Full streaming is only supported for Gemini; other providers return a single chunk.
     """
-    from fastapi.responses import StreamingResponse
     import google.generativeai as genai
 
     try:
         prompt = CLINICAL_PROMPT_TEMPLATE.format(note_text=req.note_text)
 
         if req.provider == "gemini":
-            genai.configure(api_key=req.api_key.get_secret_value())
-            model = genai.GenerativeModel(req.model_id)
-            response = model.generate_content(prompt, stream=True)
+            # Gemini's stream iterator is blocking; run it in executor to avoid blocking event loop
+            chunk_queue = asyncio.Queue()
+            loop = asyncio.get_running_loop()
 
-            async def sse_generator():
+            api_key = _get_key(req.provider, req.api_key)
+
+            def sync_gemini_stream():
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(req.model_id)
+                response = model.generate_content(prompt, stream=True)
                 try:
                     for chunk in response:
                         if chunk.text:
-                            yield f"data: {json.dumps({'chunk': chunk.text})}\n\n"
-                    yield f"event: end\ndata: {json.dumps({'status': 'complete'})}\n\n"
+                            loop.call_soon_threadsafe(chunk_queue.put_nowait, chunk.text)
                 except Exception as e:
-                    yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
-
-        else:
-            # Non-Gemini: get full response then emit as one chunk
-            full_text = call_llm_with_retry(prompt, req.provider, req.model_id, req.api_key.get_secret_value())
+                    loop.call_soon_threadsafe(chunk_queue.put_nowait, ("error", str(e)))
+                finally:
+                    loop.call_soon_threadsafe(chunk_queue.put_nowait, None)
 
             async def sse_generator():
-                yield f"data: {json.dumps({'chunk': full_text})}\n\n"
+                loop.run_in_executor(None, sync_gemini_stream)
+                while True:
+                    item = await chunk_queue.get()
+                    if item is None:
+                        break
+                    if isinstance(item, tuple) and item[0] == "error":
+                        yield f"event: error\ndata: {json.dumps({'error': item[1]})}\n\n"
+                        break
+                    yield f"data: {json.dumps({'chunk': item})}\n\n"
                 yield f"event: end\ndata: {json.dumps({'status': 'complete'})}\n\n"
+
+            return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+        # Non-Gemini: get full response then emit as one chunk
+        api_key = _get_key(req.provider, req.api_key)
+        full_text = call_llm_with_retry(prompt, req.provider, req.model_id, api_key)
+
+        async def sse_generator():
+            yield f"data: {json.dumps({'chunk': full_text})}\n\n"
+            yield f"event: end\ndata: {json.dumps({'status': 'complete'})}\n\n"
 
         return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
@@ -208,7 +253,8 @@ async def clinical_extract_stream(req: ClinicalExtractRequest):
 # ─── Structured Schema Extraction ─────────────────────────────────────────────
 
 @app.post("/api/extract-structured")
-async def extract_structured(req: StructuredExtractRequest):
+@limiter.limit(_RATE_LIMIT)
+async def extract_structured(request: Request, req: StructuredExtractRequest):
     try:
         schema_desc = "\n".join([
             f"- {f.name} ({f.type}): {f.description}"
@@ -229,8 +275,9 @@ RULES:
 """
         full_prompt = f"{system_prompt}\n\nTEXT TO PROCESS:\n{req.text}"
 
+        api_key = _get_key(req.provider, req.api_key)
         use_json_mode = req.provider in ("gemini", "openai")
-        raw = call_llm_with_retry(full_prompt, req.provider, req.model_id, req.api_key.get_secret_value(), json_mode=use_json_mode)
+        raw = call_llm_with_retry(full_prompt, req.provider, req.model_id, api_key, json_mode=use_json_mode)
 
         try:
             structured = json.loads(raw) if isinstance(raw, str) else raw
@@ -248,7 +295,8 @@ RULES:
 # ─── File Parse Endpoint (PDF / DOCX / TXT) ────────────────────────────────────
 
 @app.post("/api/parse-file")
-async def parse_file(file: UploadFile = File(...)):
+@limiter.limit(os.getenv("RATE_LIMIT_PARSE", "60/minute"))
+async def parse_file(request: Request, file: UploadFile = File(...)):
     """Extract plain text from an uploaded PDF, DOCX, or TXT file."""
     return await parse_upload_file(file)
 
@@ -256,7 +304,8 @@ async def parse_file(file: UploadFile = File(...)):
 # ─── Batch Extraction Endpoint ─────────────────────────────────────────────────
 
 @app.post("/api/extract-batch")
-async def extract_batch(req: BatchExtractRequest):
+@limiter.limit(_RATE_LIMIT)
+async def extract_batch(request: Request, req: BatchExtractRequest):
     """Run schema-based extraction over multiple texts in parallel."""
     schema_desc = "\n".join(
         f"- {f.name} ({f.type}): {f.description}"
@@ -270,15 +319,15 @@ FIELDS:
 {schema_desc}
 """
 
-    key = req.api_key.get_secret_value()
+    api_key = _get_key(req.provider, req.api_key)
     use_json = req.provider in ("gemini", "openai")
 
     async def process_one(item: BatchExtractItem) -> dict:
         full_prompt = f"{system_prompt}\n\nTEXT:\n{item.text}"
         try:
-            raw = await asyncio.get_event_loop().run_in_executor(
+            raw = await asyncio.get_running_loop().run_in_executor(
                 None,
-                lambda: call_llm_with_retry(full_prompt, req.provider, req.model_id, key, json_mode=use_json)
+                lambda: call_llm_with_retry(full_prompt, req.provider, req.model_id, api_key, json_mode=use_json)
             )
             try:
                 data = json.loads(raw) if isinstance(raw, str) else raw
@@ -296,7 +345,8 @@ FIELDS:
 # ─── CSV Export Helper ─────────────────────────────────────────────────────────
 
 @app.post("/api/export-csv")
-async def export_csv(req: ExportCSVRequest):
+@limiter.limit("60/minute")
+async def export_csv(request: Request, req: ExportCSVRequest):
     """Convert a list of dicts to a CSV file download."""
     import csv
     import io

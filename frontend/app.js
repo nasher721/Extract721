@@ -53,15 +53,13 @@ function initConfig() {
         }
     });
 
-    // Eye toggles
+    // Eye toggles (pass elements since SVG icons may not have IDs)
     document.querySelectorAll('.input-toggle-btn[data-toggle]').forEach(btn => {
         btn.addEventListener('click', () => {
             const inputId = btn.dataset.toggle;
             const eyeOpen = btn.querySelector('.eye-open');
             const eyeClosed = btn.querySelector('.eye-closed');
-            toggleSecret(inputId, eyeOpen.id, eyeClosed.id); // Slight mismatch in utils function params but I'll fix it if needed
-            // Actually utils.js toggleSecret(inputId, eyeOpenId, eyeClosedId) expect IDs
-            // Let's just use it directly here if easier or align utils.
+            toggleSecret(inputId, eyeOpen, eyeClosed);
         });
     });
 

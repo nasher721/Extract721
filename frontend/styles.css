@@ -6,7 +6,9 @@
 /* --- Tokens & Custom Properties --- */
 :root {
     --bg-base: #03030b;
+    --bg-dark: #11111b;
     --bg-surface: #0a0a1a;
+    --surface-light: #1a1a2e;
     --bg-panel: #0e0e1e;
     --bg-elevated: #15152a;
     --bg-input: #1b1b31;
@@ -14,6 +16,7 @@
 
     --border: rgba(255, 255, 255, 0.08);
     --border-subtle: rgba(255, 255, 255, 0.04);
+    --border-color: rgba(255, 255, 255, 0.08);
     --border-focus: #6366f1;
 
     --accent-primary: #818cf8;
@@ -27,6 +30,7 @@
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
+    --text-dim: #475569;
     --text-code: #c7d2fe;
 
     --glow-primary: 0 0 25px rgba(99, 102, 241, 0.3);
@@ -696,6 +700,16 @@ select.form-input {
     color: var(--text-primary);
 }
 
+.btn-icon:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+.btn-icon.danger:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
 .btn-icon.danger:hover {
     background: rgba(244, 63, 94, 0.15);
     color: var(--accent-rose);
@@ -974,6 +988,16 @@ select.form-input {
     box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
 }
 
+.btn-extract:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+.btn-extract:active {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
 .btn-extract:active {
     transform: translateY(0);
 }
@@ -1036,6 +1060,11 @@ select.form-input {
     border-color: var(--accent-primary);
     color: var(--text-primary);
     background: var(--bg-hover);
+}
+
+.btn-secondary:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
 }
 
 /* --- Results Panel --- */
@@ -1263,6 +1292,12 @@ select.form-input {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+.toast.fade-out {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* --- Utility Classes --- */
@@ -2216,7 +2251,7 @@ select.form-input {
 }
 
 .u-bg-dark {
-    background: #11111b !important;
+    background: var(--bg-dark) !important;
 }
 
 .u-bg-transparent {

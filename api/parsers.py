@@ -15,28 +15,42 @@ async def parse_upload_file(file: UploadFile) -> dict:
                 import pdfplumber
             except ImportError:
                 raise HTTPException(status_code=422, detail="pdfplumber not installed. Run: pip install pdfplumber")
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(content)
-                tmp_path = tmp.name
-            pages = []
-            with pdfplumber.open(tmp_path) as pdf:
-                for page in pdf.pages:
-                    pages.append(page.extract_text() or "")
-            os.unlink(tmp_path)
-            return {"text": "\n\n".join(pages), "filename": file.filename, "pages": len(pages)}
+            tmp_path = None
+            try:
+                with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                    tmp.write(content)
+                    tmp_path = tmp.name
+                pages = []
+                with pdfplumber.open(tmp_path) as pdf:
+                    for page in pdf.pages:
+                        pages.append(page.extract_text() or "")
+                return {"text": "\n\n".join(pages), "filename": file.filename, "pages": len(pages)}
+            finally:
+                if tmp_path and os.path.exists(tmp_path):
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
 
         elif filename.endswith(".docx"):
             try:
                 from docx import Document as DocxDocument
             except ImportError:
                 raise HTTPException(status_code=422, detail="python-docx not installed. Run: pip install python-docx")
-            with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
-                tmp.write(content)
-                tmp_path = tmp.name
-            doc = DocxDocument(tmp_path)
-            os.unlink(tmp_path)
-            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-            return {"text": "\n\n".join(paragraphs), "filename": file.filename}
+            tmp_path = None
+            try:
+                with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+                    tmp.write(content)
+                    tmp_path = tmp.name
+                doc = DocxDocument(tmp_path)
+                paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+                return {"text": "\n\n".join(paragraphs), "filename": file.filename}
+            finally:
+                if tmp_path and os.path.exists(tmp_path):
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
 
         else:
             raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.filename}. Supported: .txt, .pdf, .docx")

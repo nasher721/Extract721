@@ -3,6 +3,11 @@ import { MODEL_PRICING_PER_1M_TOKENS } from './constants.js';
 
 export const $ = id => document.getElementById(id);
 
+/** Generate a unique ID for schema fields, prompts, etc. */
+export function uniqueId(prefix = 'id') {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function escHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -42,10 +47,16 @@ export function registerEvent(id, event, handler) {
     if (el) el.addEventListener(event, handler);
 }
 
-export function toggleSecret(inputId, eyeOpenId, eyeClosedId) {
+/**
+ * Toggle password visibility. Accepts input ID plus eye icons as IDs or DOM elements.
+ * @param {string} inputId - ID of the password input
+ * @param {string|HTMLElement|null} eyeOpenRef - ID or element for "visible" icon
+ * @param {string|HTMLElement|null} eyeClosedRef - ID or element for "hidden" icon
+ */
+export function toggleSecret(inputId, eyeOpenRef, eyeClosedRef) {
     const input = $(inputId);
-    const open = $(eyeOpenId);
-    const closed = $(eyeClosedId);
+    const open = typeof eyeOpenRef === 'string' ? $(eyeOpenRef) : eyeOpenRef;
+    const closed = typeof eyeClosedRef === 'string' ? $(eyeClosedRef) : eyeClosedRef;
     if (!input) return;
 
     const isPassword = input.type === 'password';
@@ -109,7 +120,11 @@ export async function apiClient(url, payload) {
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP Error ${res.status}`);
+        const detail = err.detail;
+        const msg = Array.isArray(detail)
+            ? detail.map(e => e.msg || JSON.stringify(e)).join('; ')
+            : (detail || `HTTP Error ${res.status}`);
+        throw new Error(msg);
     }
     return await res.json();
 }

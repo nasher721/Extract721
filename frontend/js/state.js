@@ -21,10 +21,10 @@ export const state = {
         { id: 'p_new', name: 'News', prompt: TEMPLATES.news, readonly: true },
         { id: 'p_fin', name: 'Financial', prompt: 'Extract financial entities: companies, tickers, currencies, revenues, profits. Include fiscal quarters as attributes.', readonly: true }
     ],
-    // Schema Builder
+    // Schema Builder (use unique IDs)
     schemaFields: [
-        { id: Date.now(), name: 'Patient Name', type: 'string', description: 'Full name of the patient' },
-        { id: Date.now() + 1, name: 'Diagnoses', type: 'array', description: 'List of confirmed medical diagnoses' }
+        { id: `sf_${Date.now()}_0`, name: 'Patient Name', type: 'string', description: 'Full name of the patient' },
+        { id: `sf_${Date.now()}_1`, name: 'Diagnoses', type: 'array', description: 'List of confirmed medical diagnoses' }
     ],
     structModel: 'gemini-2.5-flash',
     // Batch Upload Tracker

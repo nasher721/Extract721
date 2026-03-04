@@ -1,7 +1,32 @@
 import json
+import os
 import re
 import time
 from fastapi import HTTPException
+
+# ─── API Key Resolution ───────────────────────────────────────────────────────
+
+_PROVIDER_ENV_KEYS = {
+    "gemini": "GEMINI_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "claude": "ANTHROPIC_API_KEY",
+    "glm": "ZHIPUAI_API_KEY",
+}
+
+
+def resolve_api_key(provider: str, client_key: str) -> str:
+    """
+    Resolve API key: use client-provided key if non-empty, else fall back to env.
+    Useful for production when keys are stored server-side.
+    """
+    key = (client_key or "").strip()
+    if key:
+        return key
+    env_key = _PROVIDER_ENV_KEYS.get(provider.lower())
+    if env_key:
+        return (os.getenv(env_key) or "").strip()
+    return ""
+
 
 # ─── Model Catalogues ──────────────────────────────────────────────────────────
 
@@ -33,7 +58,10 @@ def call_llm(prompt: str, provider: str, model_id: str, api_key: str,
         if stream:
             return model.generate_content(prompt, stream=True, generation_config=gen_config)
         response = model.generate_content(prompt, generation_config=gen_config)
-        return response.text.strip()
+        text = (response.text or "").strip()
+        if not text:
+            raise ValueError("Gemini returned an empty response")
+        return text
 
     elif provider == "openai":
         from openai import OpenAI
@@ -46,7 +74,10 @@ def call_llm(prompt: str, provider: str, model_id: str, api_key: str,
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
         response = client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content.strip()
+        text = response.choices[0].message.content.strip() if response.choices else ""
+        if not text:
+            raise ValueError("OpenAI returned an empty response")
+        return text
 
     elif provider == "claude":
         import anthropic
@@ -54,18 +85,24 @@ def call_llm(prompt: str, provider: str, model_id: str, api_key: str,
         response = client.messages.create(
             model=model_id,
             max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        return response.content[0].text.strip()
+        text = response.content[0].text.strip() if response.content else ""
+        if not text:
+            raise ValueError("Claude returned an empty response")
+        return text
 
     elif provider == "glm":
         from zhipuai import ZhipuAI
         client = ZhipuAI(api_key=api_key)
         response = client.chat.completions.create(
             model=model_id,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        return response.choices[0].message.content.strip()
+        text = response.choices[0].message.content.strip() if response.choices else ""
+        if not text:
+            raise ValueError("GLM returned an empty response")
+        return text
 
     else:
         raise ValueError(f"Unsupported provider: '{provider}'. Choose from: gemini, openai, claude, glm")
@@ -81,6 +118,15 @@ def clean_json_response(raw: str) -> dict:
         raise HTTPException(
             status_code=422,
             detail=f"Model returned invalid JSON — could not parse response: {e}"
+        )
+
+
+def require_api_key(provider: str, api_key: str) -> None:
+    """Raise HTTPException if API key is missing after resolution."""
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail=f"API key required for {provider}. Set it in the UI or via {_PROVIDER_ENV_KEYS.get(provider, 'provider env var')}.",
         )
 
 
