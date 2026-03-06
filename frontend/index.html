@@ -609,6 +609,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
               <button class="schema-template-chip" data-template="medical">Medical</button>
               <button class="schema-template-chip" data-template="research">Research</button>
               <button class="schema-template-chip" data-template="product">Product</button>
+              <button class="schema-template-chip" data-template="icu_clinical">ICU Clinical</button>
             </div>
           </div>
         </section>
@@ -828,7 +829,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <ul class="help-list" style="list-style:none; padding:0; margin:0;">
           <li class="help-item"><strong>Standard</strong> — Few-shot extraction: define a prompt, add examples with entities and attributes, extract from any text. Best for NER, relationships, custom schemas.</li>
           <li class="help-item"><strong>Clinical</strong> — Paste raw EMR notes; AI strips clutter and returns structured JSON (HPI, vitals, labs, plan, etc.). Drop PDF/DOCX to import.</li>
-          <li class="help-item"><strong>Schema</strong> — Define custom fields (name, type, description), extract to JSON. Use templates (Invoice, Resume, etc.) or batch multiple texts.</li>
+          <li class="help-item"><strong>Schema</strong> — Define custom fields (name, type, description), extract to JSON. Use templates (Invoice, Resume, ICU Clinical, etc.) or batch multiple texts.</li>
         </ul>
         <p class="u-mt-lg u-text-secondary">
           <a href="https://github.com/google/langextract/blob/main/README.md" target="_blank" rel="noopener">View full documentation →</a>
