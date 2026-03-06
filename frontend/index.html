@@ -515,6 +515,7 @@ The AI will strip administrative clutter and return a structured clinical JSON w
         <div class="results-tabs u-hidden" id="clinResultsTabs">
           <button class="results-tab active" data-clin-tab="cards" id="clinTabCards">Cards</button>
           <button class="results-tab" data-clin-tab="json" id="clinTabJson">JSON</button>
+          <button class="results-tab" data-clin-tab="raw" id="clinTabRaw">Raw</button>
           <button class="btn-copy u-ml-auto u-p-sm u-fs-sm u-flex-center u-border-thin u-bg-dark-glass"
             id="clinCopyHistoriesBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -568,6 +569,19 @@ The AI will strip administrative clutter and return a structured clinical JSON w
             </button>
           </div>
           <pre id="clinJsonOutput" class="json-output"></pre>
+        </div>
+        <div id="clinTabRawContent" class="tab-content u-hidden">
+          <div class="json-toolbar">
+            <span class="json-label">Raw LLM Output</span>
+            <button class="btn-copy" id="clinCopyRawBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre id="clinRawOutput" class="json-output"></pre>
         </div>
       </div>
     </section>
