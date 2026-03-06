@@ -39,6 +39,14 @@ export function initClinicalMode() {
         }
     });
 
+    registerEvent('clinCopyRawBtn', 'click', () => {
+        const textContent = $('clinRawOutput')?.textContent;
+        if (textContent) {
+            navigator.clipboard.writeText(textContent)
+                .then(() => showToast('Raw output copied!', 'success'));
+        }
+    });
+
     registerEvent('clinCopyHistoriesBtn', 'click', copyHistories);
 }
 
@@ -106,6 +114,8 @@ export async function runClinicalExtraction() {
 
         const jsonOut = $('clinJsonOutput');
         jsonOut.textContent = "Streaming...";
+        const rawOut = $('clinRawOutput');
+        if (rawOut) rawOut.textContent = "Streaming...";
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
@@ -155,9 +165,10 @@ export async function runClinicalExtraction() {
                     provider: state.provider
                 });
                 structured = finalData.structured;
+                rawOutput = finalData.raw_llm_output || rawOutput;
             }
             state.clinStructuredData = structured;
-            displayClinicalResults(structured);
+            displayClinicalResults(structured, rawOutput);
             setStatus('ready', 'Done');
             showToast('Note processed successfully', 'success');
 
@@ -174,7 +185,7 @@ export async function runClinicalExtraction() {
             const parsed = parseStreamedJson(rawOutput);
             if (parsed) {
                 state.clinStructuredData = parsed;
-                displayClinicalResults(parsed);
+                displayClinicalResults(parsed, rawOutput);
             } else {
                 showError(e.message);
             }
@@ -190,7 +201,7 @@ export async function runClinicalExtraction() {
     }
 }
 
-function displayClinicalResults(data) {
+function displayClinicalResults(data, rawOutput = '') {
     const cardsEl = $('clinTabCardsContent');
     const summaryEl = $('clinSmartSummary');
     if (!cardsEl) return;
@@ -276,10 +287,11 @@ function displayClinicalResults(data) {
     });
 
     $('clinJsonOutput').textContent = JSON.stringify(data, null, 2);
+    $('clinRawOutput').textContent = rawOutput || JSON.stringify(data, null, 2);
 }
 
 function switchClinTab(tab) {
-    ['cards', 'json'].forEach(t => {
+    ['cards', 'json', 'raw'].forEach(t => {
         $(`clinTab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('active', t === tab);
         $(`clinTab${t.charAt(0).toUpperCase() + t.slice(1)}Content`).style.display = t === tab ? 'flex' : 'none';
     });
@@ -300,6 +312,7 @@ function showError(msg) {
     $('clinResultsTabs').style.display = 'none';
     $('clinTabCardsContent').style.display = 'none';
     $('clinTabJsonContent').style.display = 'none';
+    $('clinTabRawContent').style.display = 'none';
 }
 
 function copyHistories() {
