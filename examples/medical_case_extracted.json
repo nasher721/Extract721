@@ -1,0 +1,1263 @@
+{
+  "metadata": {
+    "schema_version": "1.0.0",
+    "extraction_date": "2026-03-06",
+    "source_description": "ICU post-operative clinical record - adult spinal deformity correction",
+    "patient_encounter": "admission 2026-03-02, currently POD4 as of 2026-03-06",
+    "note_author": "Umair Hamid, MD",
+    "note_last_edited": "2026-03-02T17:37"
+  },
+
+  "extractions": {
+
+    "patient_demographics": {
+      "age_years": 41,
+      "sex": "male",
+      "weight_kg": 103.2,
+      "admission_date": "2026-03-02",
+      "icu_admission_date": "2026-03-02",
+      "icu_admission_reason": "post-operative monitoring after major spinal deformity correction",
+      "code_status": "FULL CODE",
+      "current_pod": 4,
+      "current_date": "2026-03-06",
+      "attending_surgeon": "William E. Clifton, MD",
+      "care_setting": "ICU"
+    },
+
+    "past_medical_history": [
+      {
+        "condition": "Gastroesophageal reflux disease (GERD)",
+        "icd_category": "K21",
+        "status": "present on admission",
+        "treatment": "PPI (pantoprazole)"
+      },
+      {
+        "condition": "Obstructive sleep apnea (OSA)",
+        "icd_category": "G47.33",
+        "status": "present on admission",
+        "treatment": "CPAP/BiPAP at home",
+        "notes": "Wife to bring BiPAP when needed post-extubation"
+      },
+      {
+        "condition": "Congenital pectus excavatum",
+        "icd_category": "Q67.6",
+        "status": "present on admission - remote surgical repair",
+        "treatment": "surgical repair in middle school",
+        "notes": "Likely contributing to baseline restrictive lung physiology; noted on ECHO"
+      },
+      {
+        "condition": "Prior L4-S1 instrumented spinal fusion",
+        "status": "prior procedure",
+        "procedure_date": "2025-01",
+        "indication": "adult spinal deformity",
+        "notes": "Failed to address pseudoarthrosis; prompted current admission"
+      },
+      {
+        "condition": "Prior spinal fusion instrumentation T9-S1",
+        "status": "current hardware",
+        "notes": "Hardware present on imaging; updated at current surgery"
+      }
+    ],
+
+    "primary_diagnosis": {
+      "principal_diagnosis": "Adult spinal deformity - congenital L3 butterfly vertebra with lumbar pseudoarthrosis",
+      "icd_description": "Scoliosis, unspecified scoliosis type, unspecified spinal region",
+      "etiology": "Congenital L3 butterfly vertebra and lumbar pseudoarthrosis",
+      "presenting_symptoms": [
+        "severe chronic back pain",
+        "functional limitation"
+      ],
+      "prior_failed_treatment": "L4-S1 instrumented fusion (January 2025)",
+      "imaging_confirmation": "MRI lumbar spine 11/25/2025 - L3 congenital butterfly vertebra, dextroscoliosis, mild retrolisthesis L3-L4 and L4-L5"
+    },
+
+    "surgical_procedure": {
+      "procedure_date": "2026-03-02",
+      "surgeon": "William E. Clifton, MD",
+      "classification": "elective major deformity correction",
+      "primary_procedure": "T9-pelvis posterior spinal instrumented fusion",
+      "components": [
+        {
+          "procedure": "L3 vertebral column resection (VCR)",
+          "description": "Complete removal of L3 vertebral body and posterior elements"
+        },
+        {
+          "procedure": "T12-L2 posterior column osteotomies (PCO)",
+          "description": "Ponte-type osteotomies T12 through L2"
+        },
+        {
+          "procedure": "T12-S1 decompression",
+          "description": "Neural decompression T12 to S1"
+        }
+      ],
+      "approach": "posterior",
+      "fusion_levels": "T9 to pelvis",
+      "case_duration_description": "prolonged",
+      "prior_related_procedure": "L4-S1 fusion January 2025"
+    },
+
+    "intraoperative_events": [
+      {
+        "event_type": "estimated blood loss",
+        "value_mL": 2200,
+        "flag": "HIGH",
+        "management": [
+          "cell saver return",
+          "3 units packed red blood cells",
+          "4 units cryoprecipitate (400 mL)"
+        ]
+      },
+      {
+        "event_type": "fluid administration",
+        "crystalloid_volume_mL": 7000,
+        "albumin_volume_mL": 2250
+      },
+      {
+        "event_type": "metabolic complication",
+        "findings": [
+          "intraoperative metabolic acidemia",
+          "mild lactic acid elevation"
+        ]
+      },
+      {
+        "event_type": "vasopressor requirement",
+        "drug": "norepinephrine (Levophed)",
+        "dose_mcg_min": 6,
+        "indication": "hemodynamic support"
+      },
+      {
+        "event_type": "monitoring device placement",
+        "devices": [
+          "central venous catheter (CVC)",
+          "arterial line (A-line)"
+        ]
+      },
+      {
+        "event_type": "point-of-care coagulation",
+        "test": "TEG (thromboelastography) baseline",
+        "timing": "intraoperative"
+      }
+    ],
+
+    "hospital_course": [
+      {
+        "date": "2026-03-02",
+        "pod": 0,
+        "label": "Surgery Day",
+        "events": [
+          "Elective deformity correction surgery completed with Dr. Clifton",
+          "EBL high intraop (1-2L) requiring cell saver, 3u PRBC, 4u cryo",
+          "Intraoperative acidemia and mild lactic elevation",
+          "Transferred post-op to ICU for hemodynamic/bleeding monitoring, drain management (HV x2), and pain control",
+          "Received additional 2u PRBC in NICU overnight"
+        ]
+      },
+      {
+        "date": "2026-03-03",
+        "pod": 1,
+        "label": "POD1",
+        "events": [
+          "HV #1 output: 440 mL overnight; HV #2: no output recorded",
+          "Transitioning from propofol to dexmedetomidine (Precedex) for SBT",
+          "Pain regimen: cyclobenzaprine, acetaminophen, gabapentin, PRN fentanyl and oxycodone",
+          "Bowel regimen: magnesium citrate, MiraLax, senna given for abdominal distention and no BM",
+          "IV furosemide 20 mg x2; concern for TACO given increased O2 requirements and CXR changes",
+          "ABG q3 hours",
+          "Fever 39.1 degrees C",
+          "WBC 17.97 k/uL"
+        ]
+      },
+      {
+        "date": "2026-03-04",
+        "pod": 2,
+        "label": "POD2",
+        "events": [
+          "IV furosemide 20 mg once with adequate response; net negative over 24 hours",
+          "IVC small and collapsible (~1.5 cm on POCUS); required fluid bolus back",
+          "Decreased O2 requirements: FiO2 35% PEEP 8; tried PS overnight but switched back to PC",
+          "Still on norepinephrine 8 mcg/min",
+          "Per Ortho: SQH (subcutaneous heparin) started today",
+          "ECHO: EF 55±5%, RV dilated, RVSP 50 mmHg (moderate pulmonary hypertension), RA pressure 15 mmHg",
+          "CT brain: no acute findings, no infarction, no hemorrhage"
+        ]
+      },
+      {
+        "date": "2026-03-05",
+        "pod": 3,
+        "label": "POD3",
+        "events": [
+          "Overnight: patient difficulty seeing; R eye visibly dilated and sluggish vs L eye; blinks to threat",
+          "Ophthalmology consulted: suspect perioperative PION; started IV methylprednisolone 1g daily x3 days; MAP goal 90-130",
+          "MRI brain/orbits ordered",
+          "Abdomen distended, peritonitis on exam, ileus on KUB",
+          "STAT CT A/P: marked bladder distention ~1200 mL - Foley placed; no other acute findings",
+          "NG placed for low intermittent suction",
+          "~17:15: bright red blood via OG - GI paged; IV pantoprazole BID started",
+          "DIC labs sent for extremity mottling: D-dimer 3900 H, fibrinogen >860",
+          "CT chest: multifocal consolidations and GGOs bilateral upper lobes (L>R), small bilateral effusions with atelectasis",
+          "IV furosemide 40 mg given AM",
+          "CK 765 (H); EKG: sinus tachycardia, nonspecific ST/T wave abnormality",
+          "On pressure support 5/PEEP 5; repeat CXR similar",
+          "ABM having BM"
+        ]
+      },
+      {
+        "date": "2026-03-06",
+        "pod": 4,
+        "label": "POD4",
+        "events": [
+          "Tachycardia overnight; improved with fluids and increased propofol",
+          "Norepinephrine for MAP augmentation 90-130 per Ophthalmology",
+          "Abdominal pain improving",
+          "CXR improved compared to prior",
+          "Gabapentin dose cut in half",
+          "Precedex to wean off propofol (propofol stopped 13:29)",
+          "Per GI: no EGD needed; continue IV PPI for 72 hours total then PO daily",
+          "COVID/Influenza A&B/RSV PCR: all negative",
+          "CAM negative (no delirium)",
+          "WBC 16.17 (06:27) then 7.77 (12:53); Hgb 9.6 (06:27); PLT 194 (06:27)"
+        ]
+      }
+    ],
+
+    "active_problems": [
+      {
+        "organ_system": "pulmonary",
+        "diagnosis": "Acute hypoxic respiratory failure",
+        "icd_category": "J96.01 (HCC)",
+        "status": "active",
+        "details": "Mechanically ventilated; FiO2 35% PEEP 8; mode PC-CSVs; TV 500 mL; PIP 21",
+        "comorbid_factor": "OSA with likely baseline restrictive physiology from pectus excavatum",
+        "contributing_factors": [
+          "multifocal pneumonia (CT chest 3/5)",
+          "small bilateral pleural effusions",
+          "atelectasis",
+          "prior TACO concern POD1"
+        ],
+        "plan": [
+          "HOB 30 degrees",
+          "PEEP minimum 8",
+          "SBT daily per RT",
+          "Duonebs q4H",
+          "Consider bronchoscopy",
+          "BAL sent (AFB and bronchoscopy C&S ordered)",
+          "Viral respiratory panel sent",
+          "Lung-protective ventilation; assess readiness for extubation when stable"
+        ]
+      },
+      {
+        "organ_system": "ophthalmology",
+        "diagnosis": "Perioperative posterior ischemic optic neuropathy (PION)",
+        "status": "active - suspected",
+        "onset_pod": 2,
+        "onset_date": "2026-03-04",
+        "right_eye_exam": "No light perception; afferent pupillary defect; 6 mm sluggish (NPI 1)",
+        "left_eye_exam": "Superior peripheral vision intact; 4 mm brisk",
+        "imaging": "CT brain/orbits 3/4 - no acute findings; MRI brain/orbits ordered",
+        "plan": [
+          "IV methylprednisolone 1000 mg daily x3 days",
+          "MAP goal 90-130 mmHg via vasopressors",
+          "MRI brain/orbits WO/W contrast ordered",
+          "Discontinue steroids and revise MAP goal if no visual improvement tomorrow",
+          "Page ophthalmology (25000) when patient able to attend clinic"
+        ]
+      },
+      {
+        "organ_system": "gastrointestinal",
+        "diagnosis": "Upper gastrointestinal bleed (suspected stress ulcer / esophageal irritation)",
+        "status": "active - monitoring",
+        "onset_date": "2026-03-05",
+        "presentation": "Bright red blood suctioned via OG tube afternoon POD3",
+        "consult": "GI consulted 3/5",
+        "plan": [
+          "IV pantoprazole 40 mg BID (continue 72 hours from initiation 3/5)",
+          "Transition to PO pantoprazole daily starting 3/9/2026",
+          "No EGD needed per GI",
+          "Monitor hemoglobin; EGD if Hgb drops >1 unit",
+          "NPO for possible bronchoscopy"
+        ]
+      },
+      {
+        "organ_system": "gastrointestinal",
+        "diagnosis": "Ileus / abdominal distension",
+        "status": "active - improving",
+        "onset_date": "2026-03-03",
+        "imaging_evidence": [
+          "KUB 3/5: mild dilation ascending/proximal transverse colon",
+          "KUB 3/6: borderline mildly dilated small bowel and colon"
+        ],
+        "last_bm": "2026-03-04",
+        "plan": [
+          "Bowel regimen: MiraLax BID + senna scheduled",
+          "NG tube low intermittent suction",
+          "NPO",
+          "Abdomen distension and pain improving POD4"
+        ]
+      },
+      {
+        "organ_system": "hematology",
+        "diagnosis": "Anemia - post-operative hemorrhagic",
+        "status": "active - stable",
+        "nadir_Hgb_gdL": 9.5,
+        "current_Hgb_gdL": 9.6,
+        "ebl_mL": 2200,
+        "transfusions_total": {
+          "PRBC_units": 5,
+          "cryoprecipitate_units": 4,
+          "cell_saver": true
+        },
+        "hv_drain_output": {
+          "HV1_mL_yesterday": 150,
+          "HV2_mL_yesterday": 0
+        },
+        "coagulation_3_05": {
+          "INR": 1.0,
+          "PT_sec": 10.5,
+          "aPTT_sec": 24.5,
+          "fibrinogen_mgdL": ">860",
+          "D_dimer_ngmL": 3900
+        },
+        "transfusion_thresholds": {
+          "Hgb_trigger_gdL": 8,
+          "PLT_trigger_kul": 100
+        },
+        "plan": [
+          "CBC q12 hours",
+          "Monitor HV output q shift",
+          "Recheck coagulation ± fibrinogen if bleeding concern",
+          "TEG if concern for ongoing coagulopathy",
+          "SCDs + SQH heparin"
+        ]
+      },
+      {
+        "organ_system": "hematology",
+        "diagnosis": "Leukocytosis",
+        "status": "active",
+        "wbc_trend_kuL": [17.97, 15.05, 12.70, 13.03, 12.35, 16.17, 7.77],
+        "wbc_dates": ["03/03", "03/04", "03/05 AM", "03/05 PM", "03/05 late", "03/06 AM", "03/06 noon"],
+        "fever_date": "2026-03-03",
+        "fever_temp_C": 39.1,
+        "procalcitonin_ngmL": 0.15,
+        "CRP_mgL": 12.4,
+        "plan": [
+          "Continue piperacillin-tazobactam (Zosyn) for VAP coverage - 7-day course ending 3/10",
+          "Monitor temperature and WBC",
+          "CBC q12"
+        ]
+      },
+      {
+        "organ_system": "infectious_disease",
+        "diagnosis": "Ventilator-associated pneumonia (VAP) - suspected",
+        "status": "active - on treatment",
+        "sputum_culture_3_03": "Few normal respiratory flora; Rare S. aureus (insignificant)",
+        "nares_result": "MSSA positive",
+        "chest_ct_3_05": "Multifocal consolidations and GGOs bilateral upper lobes (L>R)",
+        "antibiotic": "piperacillin-tazobactam (Zosyn) 3.375g q6H IV",
+        "course_end_date": "2026-03-10",
+        "pending_cultures": "BAL cultures (bronchoscopy culture and gram stain ordered STAT)",
+        "covid_flu_rsv_3_06": "All negative"
+      },
+      {
+        "organ_system": "cardiovascular",
+        "diagnosis": "Vasopressor-dependent hypotension / MAP augmentation for PION",
+        "status": "active",
+        "vasopressor": "norepinephrine (Levophed)",
+        "last_rate_mcg_min": 5,
+        "last_rate_datetime": "2026-03-06T11:30",
+        "map_goal_mmHg": "90-130",
+        "indication": "Augmentation for perioperative PION management",
+        "echo_3_04": {
+          "EF_pct": "55",
+          "LV_size": "normal",
+          "LV_function": "normal",
+          "RV": "dilated, normal function",
+          "RVSP_mmHg": 50,
+          "RA_pressure_mmHg": 15,
+          "interpretation": "moderate pulmonary hypertension"
+        },
+        "ekg_3_05": "Sinus tachycardia; nonspecific ST and T wave abnormality",
+        "plan": [
+          "Continuous telemetry",
+          "MAP goal ≥65 mmHg minimum; 90-130 per ophthalmology for PION",
+          "Wean vasopressors if MAP goal revised after ophthalmology reassessment",
+          "Monitor for ongoing bleeding if tachycardia/hypotension"
+        ]
+      },
+      {
+        "organ_system": "musculoskeletal",
+        "diagnosis": "Post-operative spinal deformity correction - T9 to pelvis",
+        "status": "active",
+        "procedure_date": "2026-03-02",
+        "hardware": "T9-pelvis posterior instrumented fusion with L3 VCR",
+        "plan": [
+          "Neuro checks q4 hours",
+          "Maintain adequate spinal cord perfusion; avoid hypotension",
+          "Upright scoliosis XR POD2 deferred (intubated); reschedule when appropriate",
+          "No brace; no heavy bending, lifting, or twisting",
+          "Dressings: maintain until POD7, Prevena wound VAC",
+          "HV drain x2 to suction - monitor output q shift",
+          "DVT prophylaxis: SCDs + SQH BID from POD2",
+          "Perioperative Ancef completed"
+        ]
+      },
+      {
+        "organ_system": "musculoskeletal",
+        "diagnosis": "Post-operative pain",
+        "status": "active - controlled",
+        "home_pain_regimen": "Gabapentin 1200 mg TID, cyclobenzaprine 10 mg TID, duloxetine 120 mg daily",
+        "inpatient_multimodal_regimen": [
+          "Acetaminophen 1000 mg q6H (scheduled)",
+          "Gabapentin 600 mg TID (home dose halved; cut in half again 3/6)",
+          "Methocarbamol (Robaxin) 750 mg q6H",
+          "Duloxetine held while intubated",
+          "Fentanyl 50-100 mcg IV q2H PRN",
+          "Oxycodone IR 5-10 mg q4H PRN"
+        ],
+        "precaution": "Monitor for respiratory depression given OSA + opioids"
+      },
+      {
+        "organ_system": "nephrology",
+        "diagnosis": "Lactic acidosis",
+        "status": "resolved",
+        "lactate_trend_mmolL": [1.2, 1.7, 1.4, 1.6, 1.7, 1.9, 1.1],
+        "lactate_dates": ["03/03", "03/04", "03/05 AM", "03/05 1229", "03/05 1555", "03/05 1825", "03/06"],
+        "current_creatinine_mgdL": 0.58,
+        "creatinine_trend": "consistently low-normal (0.57-0.80 range)",
+        "plan": [
+          "Off maintenance fluids (volume overload concern)",
+          "Aim net negative UOP daily",
+          "Monitor BMP, Mg, ionized calcium",
+          "Strict intake/output"
+        ]
+      },
+      {
+        "organ_system": "endocrine",
+        "diagnosis": "Hyperglycemia - stress-related",
+        "status": "active - managed",
+        "HbA1c_pct": 4.8,
+        "HbA1c_date": "2026-02-17",
+        "glucose_trend_mgdL": [147, 130, 125, 136, 177, 166, 136, 124, 105, 108, 91],
+        "management": "Insulin lispro 0-5 units SQ q6H sliding scale",
+        "monitoring": "POC glucose q6H; STAT if hypoglycemia suspected",
+        "hypoglycemia_protocol": "active orders in place"
+      }
+    ],
+
+    "medications": {
+      "continuous_infusions": [
+        {
+          "generic_name": "norepinephrine",
+          "brand_name": "Levophed",
+          "concentration": "16 mg in D5W 250 mL",
+          "dose_range": "0.6-10 mcg/min",
+          "last_rate_mcg_min": 5,
+          "last_rate_datetime": "2026-03-06T11:30",
+          "route": "intravenous",
+          "status": "active",
+          "indication": "MAP augmentation 90-130 for PION"
+        },
+        {
+          "generic_name": "dexmedetomidine",
+          "brand_name": "Precedex",
+          "concentration": "400 mcg in NS 100 mL",
+          "dose_range": "0.2-0.7 mcg/kg/hr",
+          "last_rate_mcg_kg_hr": 0.7,
+          "last_rate_datetime": "2026-03-06T14:00",
+          "route": "intravenous",
+          "status": "active",
+          "indication": "sedation; weaning off propofol"
+        },
+        {
+          "generic_name": "propofol",
+          "brand_name": "Diprivan",
+          "dose_range": "5-60 mcg/kg/min",
+          "route": "intravenous",
+          "status": "stopped",
+          "stopped_datetime": "2026-03-06T13:29"
+        },
+        {
+          "generic_name": "nicardipine",
+          "brand_name": "Cardene",
+          "concentration": "40 mg in iso-osmotic NaCl 200 mL",
+          "dose_range": "2.5-15 mg/hr",
+          "route": "intravenous",
+          "status": "stopped",
+          "stopped_datetime": "2026-03-05T19:00"
+        }
+      ],
+      "scheduled": [
+        {
+          "generic_name": "acetaminophen",
+          "brand_name": "Tylenol",
+          "dose_mg": 1000,
+          "frequency": "q6H",
+          "route": "oral/feeding tube",
+          "status": "active"
+        },
+        {
+          "generic_name": "gabapentin",
+          "brand_name": "Neurontin",
+          "dose_mg": 600,
+          "frequency": "TID",
+          "route": "oral/feeding tube",
+          "status": "active",
+          "notes": "Home dose 1200 mg TID; halved to 600 mg TID; further reduced 3/6"
+        },
+        {
+          "generic_name": "methocarbamol",
+          "brand_name": "Robaxin",
+          "dose_mg": 750,
+          "frequency": "q6H",
+          "route": "oral/feeding tube",
+          "status": "active"
+        },
+        {
+          "generic_name": "methylprednisolone sodium succinate",
+          "brand_name": "Solu-Medrol",
+          "dose_mg": 1000,
+          "frequency": "q24H",
+          "route": "intravenous",
+          "status": "active",
+          "indication": "perioperative PION",
+          "course": "3 days starting 3/5/2026",
+          "notes": "Discontinue if no visual improvement at ophthalmology reassessment"
+        },
+        {
+          "generic_name": "piperacillin-tazobactam",
+          "brand_name": "Zosyn",
+          "dose_g": 3.375,
+          "frequency": "q6H",
+          "route": "intravenous",
+          "status": "active",
+          "indication": "VAP coverage",
+          "course_end_date": "2026-03-10"
+        },
+        {
+          "generic_name": "heparin unfractionated",
+          "dose_units": 5000,
+          "frequency": "q8H",
+          "route": "subcutaneous",
+          "status": "active",
+          "indication": "VTE prophylaxis",
+          "start_pod": 2,
+          "start_date": "2026-03-04"
+        },
+        {
+          "generic_name": "ipratropium-albuterol",
+          "brand_name": "DuoNeb",
+          "dose_mL": 3,
+          "frequency": "q4H",
+          "route": "inhalation/nebulizer",
+          "status": "active"
+        },
+        {
+          "generic_name": "pantoprazole",
+          "brand_name": "Protonix",
+          "dose_mg": 40,
+          "frequency": "BID AC (0600/1600)",
+          "route": "intravenous",
+          "status": "active",
+          "transition_date": "2026-03-09",
+          "transition_to": "pantoprazole 40 mg PO BID",
+          "indication": "GI bleed prophylaxis / active GI bleed management"
+        },
+        {
+          "generic_name": "polyethylene glycol 3350",
+          "brand_name": "MiraLax",
+          "dose_g": 17,
+          "frequency": "BID",
+          "route": "oral/feeding tube",
+          "status": "active",
+          "indication": "bowel regimen / ileus"
+        },
+        {
+          "generic_name": "senna-docusate",
+          "brand_name": "Senna-S",
+          "dose_tabs": 2,
+          "frequency": "BID",
+          "route": "oral/feeding tube",
+          "status": "active"
+        },
+        {
+          "generic_name": "mupirocin",
+          "brand_name": "Bactroban",
+          "dose_g": 0.5,
+          "concentration_pct": 2,
+          "frequency": "BID",
+          "route": "nasal",
+          "status": "active",
+          "indication": "MSSA nares decolonization"
+        },
+        {
+          "generic_name": "insulin lispro",
+          "brand_name": "Admelog",
+          "dose_range_units": "0-5",
+          "frequency": "q6H",
+          "route": "subcutaneous",
+          "status": "active",
+          "indication": "hyperglycemia management"
+        }
+      ],
+      "prn": [
+        {
+          "generic_name": "fentanyl",
+          "brand_name": "Sublimaze",
+          "dose_mcg_range": "50-100",
+          "frequency": "q2H PRN",
+          "route": "intravenous",
+          "indication": "breakthrough pain"
+        },
+        {
+          "generic_name": "oxycodone IR",
+          "brand_name": "Roxicodone",
+          "dose_mg_range": "5-10",
+          "frequency": "q4H PRN",
+          "route": "oral/feeding tube",
+          "indication": "breakthrough pain"
+        },
+        {
+          "generic_name": "labetalol",
+          "brand_name": "Normodyne",
+          "dose_mg": 5,
+          "frequency": "q15min PRN",
+          "route": "intravenous",
+          "indication": "hypertension (MAP >130)"
+        },
+        {
+          "generic_name": "ondansetron",
+          "brand_name": "Zofran",
+          "dose_mg": 4,
+          "frequency": "q6H PRN",
+          "route": "intravenous",
+          "indication": "nausea/vomiting"
+        },
+        {
+          "generic_name": "prochlorperazine",
+          "brand_name": "Compazine",
+          "dose_mg": 10,
+          "frequency": "q6H PRN",
+          "route": "intravenous",
+          "indication": "nausea/vomiting (alternative)"
+        },
+        {
+          "generic_name": "diphenhydramine",
+          "brand_name": "Benadryl",
+          "dose_mg_range": "25-50",
+          "frequency": "q8H PRN",
+          "route": "intravenous"
+        },
+        {
+          "generic_name": "potassium chloride",
+          "brand_name": "Klor-Con",
+          "dose_mEq": 40,
+          "frequency": "q2H PRN",
+          "route": "oral/feeding tube",
+          "indication": "hypokalemia repletion"
+        },
+        {
+          "generic_name": "magnesium sulfate",
+          "dose_g": 2,
+          "frequency": "PRN",
+          "route": "intravenous",
+          "indication": "hypomagnesemia repletion"
+        },
+        {
+          "generic_name": "bisacodyl",
+          "brand_name": "Dulcolax",
+          "dose_mg": 10,
+          "frequency": "daily PRN",
+          "route": "rectal",
+          "indication": "constipation"
+        },
+        {
+          "generic_name": "dextrose / glucagon hypoglycemia protocol",
+          "options": [
+            "dextrose 15 g PO (TruePlus)",
+            "dextrose 10% 12.5 g IV bolus",
+            "glucagon 1 mg IM"
+          ],
+          "indication": "blood glucose <70 mg/dL"
+        }
+      ]
+    },
+
+    "laboratory_results": {
+      "complete_blood_count": {
+        "most_recent_datetime": "2026-03-06T12:53",
+        "WBC_kuL": {"value": 7.77, "ref_range": "3.70-11.00", "flag": null},
+        "RBC_muL": {"value": 6.32, "ref_range": "4.20-6.00", "flag": "H", "notes": "Likely hemoconcentration artifact - correlate clinically"},
+        "Hgb_gdL": {"value": 19.1, "ref_range": "13.0-17.0", "flag": "H", "notes": "Critical elevation - likely artifact/specimen error; prior value 9.6 at 06:27"},
+        "Hct_pct": {"value": 55.9, "ref_range": "39.0-51.0", "flag": "H"},
+        "PLT_kuL": {"value": 112, "ref_range": "150-400", "flag": "L"},
+        "prior_AM_values_06_27": {
+          "WBC_kuL": 16.17,
+          "Hgb_gdL": 9.6,
+          "Hct_pct": 28.3,
+          "PLT_kuL": 194
+        }
+      },
+      "comprehensive_metabolic_panel": {
+        "datetime": "2026-03-05T22:36",
+        "Na_mmolL": {"value": 139, "ref_range": "136-144", "flag": null},
+        "K_mmolL": {"value": 3.5, "ref_range": "3.7-5.1", "flag": "L"},
+        "Cl_mmolL": {"value": 101, "ref_range": "98-107", "flag": null},
+        "CO2_mmolL": {"value": 25, "ref_range": "22-30", "flag": null},
+        "anion_gap": {"value": 13, "ref_range": "8-15", "flag": null},
+        "BUN_mgdL": {"value": 11, "ref_range": "9-24", "flag": null},
+        "creatinine_mgdL": {"value": 0.58, "ref_range": "0.73-1.22", "flag": "L"},
+        "eGFR_mLmin_1_73m2": {"value": 126, "ref_range": ">=60", "flag": null},
+        "glucose_mgdL": {"value": 136, "ref_range": "74-99", "flag": "H"},
+        "Ca_mgdL": {"value": 8.8, "ref_range": "8.5-10.2", "flag": null},
+        "total_protein_gdL": {"value": 5.9, "ref_range": "6.3-8.0", "flag": "L"},
+        "albumin_gdL": {"value": 3.2, "ref_range": "3.9-4.9", "flag": "L"},
+        "AST_UL": {"value": 35, "ref_range": "10-50", "flag": null},
+        "ALT_UL": {"value": 25, "ref_range": "10-50", "flag": null},
+        "ALP_UL": {"value": 49, "ref_range": "38-113", "flag": null},
+        "T_bili_mgdL": {"value": 0.5, "ref_range": "0.2-1.3", "flag": null}
+      },
+      "coagulation": {
+        "datetime": "2026-03-05T22:36",
+        "PT_sec": {"value": 10.5, "ref_range": "9.7-13.0", "flag": null},
+        "INR": {"value": 1.0, "ref_range": "0.9-1.3", "flag": null},
+        "aPTT_sec": {"value": 24.5, "ref_range": "23.0-32.4", "flag": null},
+        "fibrinogen_mgdL": {"value": ">860", "ref_range": "200-400", "flag": "H", "datetime": "2026-03-05T19:37"},
+        "D_dimer_ngmL_FEU": {"value": 3900, "ref_range": "<500", "flag": "H", "datetime": "2026-03-05T19:37"}
+      },
+      "electrolytes_additional": {
+        "datetime": "2026-03-05T22:36",
+        "Mg_mgdL": {"value": 2.2, "ref_range": "1.7-2.3", "flag": null},
+        "phosphorus_mgdL": {"value": 1.6, "ref_range": "2.7-4.8", "flag": "L"}
+      },
+      "cardiac_and_muscle": {
+        "CK_UL_3_05": {"value": 765, "ref_range": "51-298", "flag": "H"},
+        "CK_UL_3_06": {"value": 468, "ref_range": "51-298", "flag": "H", "trend": "decreasing"}
+      },
+      "thyroid": {
+        "TSH_mIUL": {"value": 0.878, "ref_range": "0.270-4.200", "flag": null, "date": "2026-03-03"}
+      },
+      "hba1c": {
+        "value_pct": 4.8,
+        "ref_range": "4.3-5.6",
+        "flag": null,
+        "date": "2026-02-17",
+        "interpretation": "normal; no diabetes"
+      },
+      "lactate_trending": {
+        "unit": "mmol/L",
+        "ref_range": "0.5-2.2",
+        "values": [
+          {"datetime": "2026-03-03T22:31", "value": 1.2},
+          {"datetime": "2026-03-05T12:29", "value": 1.6},
+          {"datetime": "2026-03-05T14:40", "value": 1.4},
+          {"datetime": "2026-03-05T15:55", "value": 1.7},
+          {"datetime": "2026-03-05T18:25", "value": 1.9},
+          {"datetime": "2026-03-06T06:56", "value": 1.1, "notes": "normalized"}
+        ]
+      },
+      "abg_trending": [
+        {
+          "datetime": "2026-03-04T14:59",
+          "type": "arterial",
+          "pH": 7.42,
+          "pCO2_mmHg": 43,
+          "pO2_mmHg": 83,
+          "HCO3_mmolL": 28,
+          "BE": 3,
+          "SpO2_pct": 95,
+          "lactate_mmolL": null,
+          "FiO2_pct": null
+        },
+        {
+          "datetime": "2026-03-05T15:55",
+          "type": "arterial",
+          "pH": 7.46,
+          "pCO2_mmHg": 41,
+          "pO2_mmHg": 77,
+          "HCO3_mmolL": 29,
+          "BE": 5,
+          "SpO2_pct": 94,
+          "Hgb_gdL": 10.6,
+          "lactate_mmolL": 1.7,
+          "FiO2_pct": 35,
+          "O2_therapy": "mechanical ventilator"
+        },
+        {
+          "datetime": "2026-03-05T18:25",
+          "type": "arterial",
+          "pH": 7.48,
+          "pCO2_mmHg": 37,
+          "pO2_mmHg": 96,
+          "HCO3_mmolL": 27,
+          "BE": 4,
+          "SpO2_pct": 98,
+          "Hgb_gdL": 10.5,
+          "lactate_mmolL": 1.9,
+          "FiO2_pct": 35,
+          "O2_therapy": "mechanical ventilator",
+          "temp_C": 37.1
+        },
+        {
+          "datetime": "2026-03-06T06:56",
+          "type": "venous",
+          "pH": 7.45,
+          "pCO2_mmHg": 39,
+          "pO2_mmHg": 38,
+          "HCO3_mmolL": 27,
+          "BE": 3,
+          "SpO2_pct": 68,
+          "Hgb_gdL": 9.5,
+          "lactate_mmolL": 1.1,
+          "FiO2_pct": 40,
+          "PEEP_cmH2O": 8,
+          "O2_therapy": "mechanical ventilator",
+          "temp_C": 37.0
+        }
+      ]
+    },
+
+    "imaging_results": [
+      {
+        "modality": "CT",
+        "body_region": "chest",
+        "contrast": "with IV contrast",
+        "date": "2026-03-05",
+        "key_findings": [
+          "Multifocal consolidations and ground-glass opacities both upper lobes (L>R) - c/f infection",
+          "Small bilateral pleural effusions with adjacent atelectasis"
+        ],
+        "interpreter": "Aamer Chughtai, MD"
+      },
+      {
+        "modality": "CT",
+        "body_region": "abdomen/pelvis",
+        "contrast": "with IV contrast",
+        "date": "2026-03-05",
+        "key_findings": [
+          "Marked bladder distention - estimated 1200 mL",
+          "No acute process in abdomen or pelvis otherwise"
+        ],
+        "action_taken": "Foley catheter placed",
+        "interpreter": "Kavita Bhatt, MD"
+      },
+      {
+        "modality": "CT",
+        "body_region": "brain",
+        "contrast": "without IV contrast",
+        "date": "2026-03-04",
+        "key_findings": [
+          "No acute findings",
+          "No acute infarction",
+          "No intracranial hemorrhage",
+          "No intracranial mass lesion"
+        ],
+        "interpreter": "Emmanuel Obusez, MD"
+      },
+      {
+        "modality": "ECHO",
+        "body_region": "cardiac",
+        "date": "2026-03-04",
+        "indication": "hypotension",
+        "key_findings": [
+          "EF 55% ± 5% (visual estimate) - normal LV systolic function",
+          "LV normal size",
+          "RV dilated with normal systolic function",
+          "Estimated RVSP 50 mmHg - moderate pulmonary hypertension",
+          "Estimated RA pressure 15 mmHg",
+          "No prior ECHO for comparison"
+        ],
+        "technical_quality": "limited - mechanically ventilated, suboptimal positioning",
+        "interpreter": "Bo Xu, MD"
+      },
+      {
+        "modality": "XR",
+        "body_region": "chest",
+        "date": "2026-03-06",
+        "key_findings": [
+          "ETT approximately 6 cm above carina",
+          "Right IJ CVC tip at superior cavoatrial junction",
+          "No substantial change in bilateral patchy opacities",
+          "Suspect trace left pleural effusion",
+          "Elevated right hemidiaphragm",
+          "No pneumothorax",
+          "Stable enlarged cardiomediastinal silhouette"
+        ],
+        "interpreter": "Scott Poswilko, MD"
+      },
+      {
+        "modality": "XR",
+        "body_region": "abdomen (KUB)",
+        "date": "2026-03-06",
+        "key_findings": [
+          "NG/OG tube tip in gastric body - subdiaphragmatic side-port",
+          "Borderline to mildly dilated small bowel and colon - likely ileus",
+          "Spinal fusion hardware",
+          "Midline skin staples"
+        ],
+        "interpreter": "David Sweet, MD"
+      },
+      {
+        "modality": "MRI",
+        "body_region": "lumbar spine",
+        "contrast": "with and without IV contrast",
+        "date": "2025-11-25",
+        "note": "Pre-operative baseline study",
+        "key_findings": [
+          "L3 congenital butterfly vertebra",
+          "Postoperative changes at L4 through S1",
+          "Mild retrolisthesis L3-L4 and L4-L5",
+          "Dextroscoliosis",
+          "L4-L5: moderate left / mild right neural foraminal narrowing",
+          "L5-S1: mild-moderate left / moderate-severe right neural foraminal narrowing"
+        ],
+        "interpreter": "Nour Aly, MD"
+      },
+      {
+        "modality": "MRI",
+        "body_region": "brain and orbits",
+        "contrast": "with and without IV contrast",
+        "date": "pending",
+        "indication": "evaluation for PION / perioperative vision loss",
+        "status": "ordered - not yet resulted"
+      }
+    ],
+
+    "microbiology": [
+      {
+        "collection_date": "2026-03-03",
+        "specimen": "sputum",
+        "culture_type": "respiratory",
+        "gram_stain": "Moderate mixed oral flora; Moderate polymorphonuclear leukocytes",
+        "organisms": [
+          {
+            "name": "Normal respiratory flora",
+            "count": "few"
+          },
+          {
+            "name": "Staphylococcus aureus",
+            "count": "rare",
+            "significance": "insignificant colony count - no further workup",
+            "susceptibility_pattern": "MSSA (inferred from nares result)"
+          }
+        ],
+        "no_growth_noted": "No Pseudomonas aeruginosa isolated"
+      },
+      {
+        "collection_date": "2026-03-06",
+        "specimen": "nasopharynx swab",
+        "test": "COVID-19/Influenza A&B/RSV PCR",
+        "results": {
+          "SARS_CoV_2": "not detected",
+          "Influenza_A": "not detected",
+          "Influenza_B": "not detected",
+          "RSV": "not detected"
+        }
+      },
+      {
+        "type": "nares screen",
+        "result": "Staphylococcus aureus positive (MSSA)",
+        "action": "mupirocin nasal decolonization BID"
+      }
+    ],
+
+    "vital_signs": {
+      "date": "2026-03-06",
+      "weight_kg": 103.2,
+      "readings": [
+        {
+          "datetime": "2026-03-06T14:20",
+          "BP_mmHg": "131/62",
+          "HR_bpm": 116,
+          "RR_bpm": 19,
+          "SpO2_pct": 100
+        },
+        {
+          "datetime": "2026-03-06T14:30",
+          "BP_mmHg": "127/61",
+          "HR_bpm": 112,
+          "SpO2_pct": 95
+        },
+        {
+          "datetime": "2026-03-06T14:45",
+          "BP_mmHg": "135/60",
+          "HR_bpm": 105,
+          "SpO2_pct": 95
+        },
+        {
+          "datetime": "2026-03-06T15:00",
+          "BP_mmHg": "125/60",
+          "HR_bpm": 107,
+          "SpO2_pct": 96
+        }
+      ],
+      "MAP_goal_mmHg": "90-130",
+      "BP_parameters_SBP": "90-160"
+    },
+
+    "ventilator_settings": {
+      "datetime": "2026-03-06T14:20",
+      "mode": "Pressure Support CPAP (PC-CSVs)",
+      "FiO2_pct": 35,
+      "set_RR_bpm": 15,
+      "tidal_volume_set_mL": 500,
+      "PEEP_cmH2O": 8,
+      "inspiratory_pressure_above_PEEP_cmH2O": 8,
+      "IE_ratio": "1:2.0",
+      "peak_inspiratory_pressure_cmH2O": 21,
+      "SpO2_target_pct": "90-96",
+      "ETT_position": "approximately 6 cm above carina"
+    },
+
+    "lines_drains_tubes": [
+      {
+        "device": "arterial line (A-line)",
+        "location": "not specified (likely radial)",
+        "status": "active"
+      },
+      {
+        "device": "central venous catheter (CVC)",
+        "type": "multilumen",
+        "location": "right internal jugular vein",
+        "tip_position": "superior cavoatrial junction",
+        "status": "active"
+      },
+      {
+        "device": "endotracheal tube (ETT)",
+        "position": "approximately 6 cm above carina",
+        "status": "active"
+      },
+      {
+        "device": "nasogastric/orogastric (NG/OG) tube",
+        "position": "tip in gastric body; side-port subdiaphragmatic",
+        "use": "low intermittent suction",
+        "status": "active"
+      },
+      {
+        "device": "Hemovac drain",
+        "number": 1,
+        "setting": "suction",
+        "output_yesterday_mL": 150,
+        "status": "active"
+      },
+      {
+        "device": "Hemovac drain",
+        "number": 2,
+        "setting": "suction",
+        "output_yesterday_mL": 0,
+        "status": "active"
+      },
+      {
+        "device": "Foley catheter",
+        "placement_date": "2026-03-05",
+        "indication": "urinary retention (bladder distention 1200 mL on CT)",
+        "status": "active; discontinue order placed",
+        "urine_output_today_mL": 500
+      }
+    ],
+
+    "transfusion_history": [
+      {
+        "product": "packed red blood cells (PRBC)",
+        "units": 3,
+        "timing": "intraoperative",
+        "date": "2026-03-02",
+        "indication": "EBL 2.2L"
+      },
+      {
+        "product": "cryoprecipitate",
+        "units": 4,
+        "volume_mL": 400,
+        "timing": "intraoperative",
+        "date": "2026-03-02",
+        "indication": "coagulopathy / fibrinogen support"
+      },
+      {
+        "product": "packed red blood cells (PRBC)",
+        "units": 2,
+        "timing": "POD0 overnight - NICU",
+        "date": "2026-03-02",
+        "indication": "ongoing anemia"
+      },
+      {
+        "product": "cell saver autotransfusion",
+        "timing": "intraoperative",
+        "date": "2026-03-02"
+      }
+    ],
+
+    "consults": [
+      {
+        "service": "Ophthalmology",
+        "consult_date": "2026-03-05",
+        "indication": "perioperative vision loss; R eye dilated, sluggish; bilateral afferent pupillary changes",
+        "diagnosis": "Perioperative posterior ischemic optic neuropathy (PION) - suspected",
+        "recommendations": [
+          "IV methylprednisolone 1000 mg daily x3 days",
+          "MAP augmentation goal 90-130 mmHg",
+          "MRI brain/orbits WO/W contrast",
+          "Ophthalmology reassessment; page 25000 when patient able to attend clinic"
+        ],
+        "current_plan": "Discontinue steroids and revise MAP goal tomorrow if no improvement"
+      },
+      {
+        "service": "Gastroenterology (GI)",
+        "consult_date": "2026-03-05",
+        "indication": "bright red blood via OG tube",
+        "recommendations": [
+          "No EGD needed at this time",
+          "Continue IV pantoprazole BID for 72-hour total course",
+          "Transition to PO pantoprazole daily thereafter",
+          "Monitor Hgb; EGD if Hgb drops >1 unit"
+        ]
+      },
+      {
+        "service": "Orthopaedic Surgery (Dr. Clifton)",
+        "ongoing": true,
+        "recommendations": [
+          "SQH heparin started POD2",
+          "No brace; no heavy bending, lifting, or twisting",
+          "Dressings until POD7 (Prevena wound VAC)",
+          "Upright scoliosis XR deferred - patient intubated",
+          "HV drains x2 to suction"
+        ]
+      },
+      {
+        "service": "Physical Therapy (PT)",
+        "consult_date": "ongoing",
+        "current_mobility_goal": "bed rest/turns only (intubated)"
+      },
+      {
+        "service": "Occupational Therapy (OT)",
+        "consult_date": "ongoing"
+      },
+      {
+        "service": "Respiratory Therapy (RT)",
+        "ongoing": true,
+        "protocols": [
+          "SBT daily and PRN",
+          "Liberation from mechanical ventilation - tracheostomy patient protocol",
+          "ABG per adult critical care protocol",
+          "Airway clearance BID and PRN",
+          "No routine lavages per RT message order"
+        ]
+      }
+    ],
+
+    "icu_bundle_status": {
+      "date": "2026-03-06",
+      "last_documented": "2026-03-06T10:31",
+      "pain_controlled": true,
+      "RASS_at_goal": true,
+      "ventilator_present": true,
+      "SAT_performed": true,
+      "SBT_performed": true,
+      "HOB_gt30_degrees": true,
+      "mouth_care": true,
+      "delirium_CAM_negative": true,
+      "sleep_adequate": true,
+      "restraints": "none",
+      "mobility_goal": "bed rest/turns only",
+      "family_engagement": "ICU team visit at bedside in last 24 hours",
+      "lines": ["arterial line", "central multilumen catheter"],
+      "foley_present": true,
+      "pressure_injury": "none",
+      "GI_stress_ulcer_prophylaxis": "PPI",
+      "nutrition_status": "NPO",
+      "VTE_chemoprophylaxis": "heparin SQ",
+      "VTE_mechanical": "knee-high SCDs"
+    },
+
+    "vte_prophylaxis": {
+      "risk_level": "Surgical Moderate Risk",
+      "mechanical": {
+        "device": "intermittent pneumatic compression (IPC) / SCD",
+        "application": "bilateral lower extremities, knee-high",
+        "frequency": "continuous except bathing and ambulation"
+      },
+      "pharmacologic": {
+        "drug": "unfractionated heparin",
+        "dose_units": 5000,
+        "route": "subcutaneous",
+        "frequency": "q8H",
+        "start_date": "2026-03-04",
+        "start_pod": 2
+      }
+    },
+
+    "intake_output": {
+      "date": "2026-03-06",
+      "shift_0700_1459": {
+        "urine_output_mL": 500,
+        "total_output_mL": 500
+      },
+      "daily_24hr_total_urine_mL": 500,
+      "daily_goal": "net negative"
+    },
+
+    "active_orders_summary": {
+      "radiology_pending": [
+        "MRI Brain WO/W IV contrast - Once",
+        "MRI Orbits WO/W IV contrast - Once",
+        "XR Scoliosis PA Standing/Lateral 2-view - Once (POD2, deferred)"
+      ],
+      "lab_monitoring": [
+        "ABG per RT adult critical care protocol",
+        "CBC with differential - daily AM draw",
+        "CBC with PLT - q12H",
+        "Complete blood count - q6H",
+        "CMP - daily AM draw",
+        "PT/INR - daily AM draw",
+        "PTT - daily AM draw",
+        "Magnesium - daily AM draw",
+        "Phosphorus - daily AM draw",
+        "Calcium ionized - daily AM draw",
+        "Venous blood gases - conditional STAT",
+        "BAL routine culture - STAT (1 occurrence)",
+        "AFB culture and stain - STAT (1 occurrence)",
+        "Bronchoscopy culture and gram stain - STAT (1 occurrence)"
+      ],
+      "monitoring": [
+        "Continuous pulse oximetry",
+        "Continuous cardiac monitoring (telemetry)",
+        "Vital signs q1H",
+        "Intake and output q1H",
+        "Neuro checks q4H",
+        "Neurological assessment q4H (Q4 at night)",
+        "Daily weight at 0600",
+        "Blood glucose monitoring q6H POC",
+        "Assess for SAT contraindications daily"
+      ],
+      "nursing_care": [
+        "HOB elevation 30-45 degrees at all times",
+        "Chlorhexidine bath daily (ICU)",
+        "Mouth care q2H and PRN",
+        "Wound dressing care",
+        "NPO - start now"
+      ]
+    },
+
+    "future_appointments": [
+      {
+        "date": "2026-03-16",
+        "time": "14:00",
+        "provider": "Rebekah Vitas, RN",
+        "department": "SPNSMN",
+        "location": "Main S Building"
+      },
+      {
+        "date": "2026-04-16",
+        "time": "13:40",
+        "provider": "Megan Lynch, APRN, CNP",
+        "department": "SPNSMN",
+        "location": "Main S Building"
+      },
+      {
+        "date": "2026-06-05",
+        "time": "10:20",
+        "provider": "William E. Clifton, MD",
+        "specialty": "Spine Surgery",
+        "department": "SPSWIL",
+        "location": "WilloughbyFH"
+      }
+    ]
+  }
+}
