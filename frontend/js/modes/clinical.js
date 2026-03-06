@@ -207,78 +207,104 @@ function displayClinicalResults(data, rawOutput = '') {
     if (!cardsEl) return;
     cardsEl.innerHTML = '';
 
-    // 1. Generate Smart Summary
+    // 1. Rich Smart Summary
     if (summaryEl) {
         summaryEl.classList.remove('u-hidden');
         summaryEl.classList.add('u-block');
-        const assessment = data.assessment || data.summary || "No assessment found.";
+
+        const diagnosis = data.assessment_impression || data.diagnosis || data.chief_complaint || 'Undetermined';
         const plan = Array.isArray(data.plan) ? data.plan : (data.plan ? [data.plan] : []);
-        const diagnosis = data.diagnosis || data.chief_complaint || "Undetermined";
+        const meds = Array.isArray(data.current_medications) ? data.current_medications : (data.current_medications ? [data.current_medications] : []);
+        const problems = Array.isArray(data.active_problems) ? data.active_problems : (data.active_problems ? [data.active_problems] : []);
+        const orders = Array.isArray(data.orders) ? data.orders : (data.orders ? [data.orders] : []);
+        const sectionsFound = getClinSections().filter(s => {
+            const v = data[s.key];
+            return v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+        }).length;
+
+        // Build impression text: if it's long use the first sentence only for the badge
+        const impressionText = typeof diagnosis === 'string' ? diagnosis : JSON.stringify(diagnosis);
+        const impressionShort = impressionText.length > 120 ? impressionText.substring(0, 120) + '…' : impressionText;
 
         summaryEl.innerHTML = `
             <div class="summary-headline">
-                <span class="u-fs-lg">🧠</span> Smart Case Summary
+                <span>🧠</span> Smart Case Summary
             </div>
-            <div class="summary-content">
-                <strong>Primary Impression:</strong> ${escHtml(typeof diagnosis === 'string' ? diagnosis : JSON.stringify(diagnosis))}<br>
-                <strong>AI Assessment:</strong> ${escHtml(typeof assessment === 'string' ? assessment : JSON.stringify(assessment))}
+            <div class="summary-impression">
+                <span class="summary-impression-label">Assessment / Impression</span>
+                <span class="summary-impression-value">${escHtml(impressionShort)}</span>
             </div>
             <div class="summary-stats">
                 <div class="stat-item">
-                    <div class="stat-value">${getClinSections().filter(s => data[s.key]).length}</div>
-                    <div class="stat-label">Sections Found</div>
+                    <div class="stat-value">${sectionsFound}</div>
+                    <div class="stat-label">Sections Extracted</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">${plan.length}</div>
+                    <div class="stat-value">${plan.length || '—'}</div>
                     <div class="stat-label">Plan Items</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">${data.vitals ? 'Yes' : 'No'}</div>
-                    <div class="stat-label">Vitals Captured</div>
+                    <div class="stat-value">${meds.length || (data.current_medications ? '✓' : '—')}</div>
+                    <div class="stat-label">Medications</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${problems.length || (data.active_problems ? '✓' : '—')}</div>
+                    <div class="stat-label">Active Problems</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.vitals ? '✓' : '—'}</div>
+                    <div class="stat-label">Vitals</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${orders.length || (data.orders ? '✓' : '—')}</div>
+                    <div class="stat-label">New Orders</div>
                 </div>
             </div>
         `;
     }
 
-    // 2. Render Cards
+    // 2. Render section cards
     getClinSections().forEach(sec => {
         const val = data[sec.key];
-        if (val === null || val === undefined || (Array.isArray(val) && val.length === 0)) return;
+        if (val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)) return;
 
         const card = document.createElement('div');
         card.className = 'clin-card';
+        card.dataset.section = sec.section;
 
-        let contentHtml = '';
-        if (typeof val === 'string') {
-            contentHtml = `<p>${escHtml(val)}</p>`;
-        } else if (Array.isArray(val)) {
-            contentHtml = `<ul class="clin-list">${val.map(item => `<li>${escHtml(typeof item === 'string' ? item : JSON.stringify(item))}</li>`).join('')}</ul>`;
-        } else {
-            contentHtml = `<pre class="clin-json-small">${escHtml(JSON.stringify(val, null, 2))}</pre>`;
-        }
+        const contentHtml = renderClinValue(val);
 
         card.innerHTML = `
-            <div class="clin-card-header">
+            <div class="clin-card-header" role="button" tabindex="0" aria-expanded="true">
                 <span class="clin-card-icon">${sec.icon}</span>
                 <span class="clin-card-title">${sec.label}</span>
-                <button class="btn-icon btn-copy-card" title="Copy section">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn-icon btn-copy-card" title="Copy ${escHtml(sec.label)}" aria-label="Copy ${escHtml(sec.label)}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
                 </button>
+                <span class="clin-card-toggle" aria-hidden="true">▾</span>
             </div>
             <div class="clin-card-body">${contentHtml}</div>
         `;
 
+        const header = card.querySelector('.clin-card-header');
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-copy-card')) return;
+            const collapsed = card.classList.toggle('collapsed');
+            header.setAttribute('aria-expanded', String(!collapsed));
+        });
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); header.click(); }
+        });
+
         const copyBtn = card.querySelector('.btn-copy-card');
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            let textToCopy = '';
-            if (typeof val === 'string') textToCopy = val;
-            else if (Array.isArray(val)) textToCopy = val.join('\n');
-            else textToCopy = JSON.stringify(val, null, 2);
-
+            const textToCopy = typeof val === 'string' ? val
+                : Array.isArray(val) ? val.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n')
+                : JSON.stringify(val, null, 2);
             navigator.clipboard.writeText(textToCopy)
                 .then(() => showToast(`${sec.label} copied!`, 'success'));
         });
@@ -286,14 +312,98 @@ function displayClinicalResults(data, rawOutput = '') {
         cardsEl.appendChild(card);
     });
 
-    $('clinJsonOutput').textContent = JSON.stringify(data, null, 2);
-    $('clinRawOutput').textContent = rawOutput || JSON.stringify(data, null, 2);
+    // JSON tab — syntax-highlighted
+    const jsonEl = $('clinJsonOutput');
+    if (jsonEl) jsonEl.innerHTML = syntaxHighlightJson(data);
+
+    // Raw tab
+    const rawEl = $('clinRawOutput');
+    if (rawEl) rawEl.textContent = rawOutput || JSON.stringify(data, null, 2);
+}
+
+/** Render a clinical field value using appropriate rich markup. */
+function renderClinValue(val) {
+    if (typeof val === 'string') {
+        return `<span class="clin-value-string">${escHtml(val)}</span>`;
+    }
+    if (Array.isArray(val)) {
+        if (val.length === 0) return '<span class="clin-value-null">None recorded</span>';
+        // Array of objects → subitem cards
+        if (val.some(item => typeof item === 'object' && item !== null)) {
+            return val.map(item =>
+                typeof item === 'object' && item !== null
+                    ? renderClinSubitem(item)
+                    : `<div class="clin-subitem"><div class="clin-subitem-row"><span class="clin-subitem-val">${escHtml(String(item))}</span></div></div>`
+            ).join('');
+        }
+        // Simple string array → styled list
+        return `<ul class="clin-list">${val.map(item =>
+            `<li class="clin-list-item">${escHtml(typeof item === 'string' ? item : JSON.stringify(item))}</li>`
+        ).join('')}</ul>`;
+    }
+    if (typeof val === 'object' && val !== null) {
+        return renderClinObject(val);
+    }
+    return `<span class="clin-value-string">${escHtml(String(val))}</span>`;
+}
+
+/** Render an object as a subitem block (used for items in object arrays). */
+function renderClinSubitem(obj) {
+    const rows = Object.entries(obj)
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .map(([k, v]) => `
+            <div class="clin-subitem-row">
+                <span class="clin-subitem-key">${escHtml(formatClinKey(k))}</span>
+                <span class="clin-subitem-val">${escHtml(typeof v === 'string' ? v : JSON.stringify(v))}</span>
+            </div>`).join('');
+    return `<div class="clin-subitem">${rows}</div>`;
+}
+
+/** Render a plain object as a key-value table (used for vitals, nested objects). */
+function renderClinObject(obj) {
+    const rows = Object.entries(obj)
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .map(([k, v]) => `
+            <tr>
+                <td class="cell-key">${escHtml(formatClinKey(k))}</td>
+                <td class="cell-val">${escHtml(typeof v === 'string' ? v : JSON.stringify(v))}</td>
+            </tr>`).join('');
+    return `<table class="clin-obj-table"><tbody>${rows}</tbody></table>`;
+}
+
+/** Convert snake_case / camelCase key to a Title Case display label. */
+function formatClinKey(k) {
+    return k.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/** Return syntax-highlighted HTML for a JSON object. */
+function syntaxHighlightJson(data) {
+    const json = JSON.stringify(data, null, 2)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        match => {
+            let cls = 'json-num';
+            if (/^"/.test(match)) {
+                cls = /:$/.test(match) ? 'json-key' : 'json-str';
+            } else if (/true|false/.test(match)) {
+                cls = 'json-bool';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return `<span class="${cls}">${match}</span>`;
+        }
+    );
 }
 
 function switchClinTab(tab) {
+    // cards → flex column; json/raw → flex column (toolbar + pre)
+    const displayMode = { cards: 'flex', json: 'flex', raw: 'flex' };
     ['cards', 'json', 'raw'].forEach(t => {
-        $(`clinTab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('active', t === tab);
-        $(`clinTab${t.charAt(0).toUpperCase() + t.slice(1)}Content`).style.display = t === tab ? 'flex' : 'none';
+        const capT = t.charAt(0).toUpperCase() + t.slice(1);
+        $(`clinTab${capT}`).classList.toggle('active', t === tab);
+        $(`clinTab${capT}Content`).style.display = t === tab ? displayMode[t] : 'none';
     });
 }
 
