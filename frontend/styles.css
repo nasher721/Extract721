@@ -1244,6 +1244,41 @@ select.form-input {
     word-break: break-word;
 }
 
+/* --- JSON Syntax Highlighting --- */
+.json-output .json-key   { color: #818cf8; }          /* indigo  – keys      */
+.json-output .json-str   { color: #34d399; }          /* green   – strings   */
+.json-output .json-num   { color: #fbbf24; }          /* amber   – numbers   */
+.json-output .json-bool  { color: #fb7185; }          /* rose    – booleans  */
+.json-output .json-null  { color: #64748b; font-style: italic; } /* muted – null */
+
+/* --- Smart Summary – impression block --- */
+.summary-impression {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background: rgba(129, 140, 248, 0.07);
+    border: 1px solid rgba(129, 140, 248, 0.18);
+    border-radius: var(--radius-md);
+}
+
+.summary-impression-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    opacity: 0.85;
+}
+
+.summary-impression-value {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
 /* --- Toast --- */
 .toast-container {
     position: fixed;
@@ -1474,6 +1509,19 @@ select.form-input {
 #clinicalResultsPanel .results-body {
     overflow: hidden;
     padding: 0;
+}
+
+/* Smart summary lives outside the scroll region — give it horizontal breathing room */
+#clinSmartSummary {
+    margin: 14px 14px 0;
+    flex-shrink: 0;
+}
+
+/* JSON and Raw tab content fill remaining height after the smart summary */
+#clinTabJsonContent,
+#clinTabRawContent {
+    flex: 1;
+    min-height: 0;
 }
 
 .clin-card {
